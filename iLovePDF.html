@@ -1,0 +1,363 @@
+<html><head><base href="https://www.ilovepdf.com/all-tools">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>iLovePDF | Todas las herramientas</title>
+<style>
+  :root {
+    --primary-color: #3498db;
+    --secondary-color: #2ecc71;
+    --accent-color: #e74c3c;
+    --background-color: #ecf0f1;
+    --text-color: #34495e;
+    --card-color: #ffffff;
+  }
+  body {
+    font-family: 'Poppins', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: var(--background-color);
+    color: var(--text-color);
+  }
+  header {
+    background-color: var(--primary-color);
+    padding: 20px 0;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  }
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+  }
+  .logo {
+    color: var(--card-color);
+    font-size: 28px;
+    font-weight: bold;
+    text-decoration: none;
+  }
+  nav {
+    float: right;
+  }
+  nav a {
+    color: var(--card-color);
+    text-decoration: none;
+    margin-left: 20px;
+    font-weight: 500;
+    transition: color 0.3s ease;
+  }
+  nav a:hover {
+    color: var(--accent-color);
+  }
+  .hero {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: var(--card-color);
+    text-align: center;
+    padding: 60px 0;
+  }
+  .hero h1 {
+    font-size: 42px;
+    margin-bottom: 20px;
+  }
+  .hero p {
+    font-size: 18px;
+    max-width: 600px;
+    margin: 0 auto 30px;
+  }
+  .tools-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 30px;
+    padding: 60px 0;
+  }
+  .tool-card {
+    background-color: var(--card-color);
+    border-radius: 12px;
+    padding: 30px;
+    text-align: center;
+    transition: all 0.3s ease;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    cursor: pointer;
+  }
+  .tool-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+  }
+  .tool-icon {
+    font-size: 48px;
+    margin-bottom: 20px;
+    color: var(--accent-color);
+  }
+  .tool-card h3 {
+    color: var(--primary-color);
+    font-size: 22px;
+    margin-bottom: 10px;
+  }
+  .tool-card p {
+    color: var(--text-color);
+    font-size: 14px;
+  }
+  footer {
+    background-color: var(--primary-color);
+    color: var(--card-color);
+    text-align: center;
+    padding: 30px 0;
+    margin-top: 40px;
+  }
+  .search-bar {
+    max-width: 600px;
+    margin: 0 auto 30px;
+    display: flex;
+  }
+  .search-bar input {
+    flex-grow: 1;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 30px 0 0 30px;
+    font-size: 16px;
+  }
+  .search-bar button {
+    background-color: var(--accent-color);
+    color: var(--card-color);
+    border: none;
+    border-radius: 0 30px 30px 0;
+    padding: 12px 24px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  .search-bar button:hover {
+    background-color: #c0392b;
+  }
+  .category-filter {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 30px;
+  }
+  .category-button {
+    background-color: var(--card-color);
+    color: var(--text-color);
+    border: none;
+    border-radius: 20px;
+    padding: 8px 16px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  .category-button:hover,
+  .category-button.active {
+    background-color: var(--accent-color);
+    color: var(--card-color);
+  }
+</style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <a href="/" class="logo">iLovePDF</a>
+      <nav>
+        <a href="/all-tools">Herramientas</a>
+        <a href="/pricing">Opci&oacute;n de pago</a>
+        <a href="/login">Log in</a>
+        <a href="/signup">Sign up</a>
+      </nav>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="container">
+      <h1>Todas las herramientas para PDF</h1>
+      <p>Descubre el mejor conjunto completo de herramientas PDF para administrar, convertir y mejorar tus documentos.</p>
+      <div class="search-bar">
+        <input type="text" placeholder="Busca tu herramienta...">
+        <button>Buscar</button>
+      </div>
+      <div class="category-filter">
+        <button class="category-button active">All</button>
+        <button class="category-button">Convert</button>
+        <button class="category-button">Edit</button>
+        <button class="category-button">Merge & Split</button>
+        <button class="category-button">Security</button>
+        <button class="category-button">Optimize</button>
+      </div>
+    </div>
+  </section>
+
+  <main class="container">
+    <div class="tools-grid">
+      <div class="tool-card" data-category="convert">
+        <div class="tool-icon">📄</div>
+        <h3>PDF to Word</h3>
+        <p>Convert PDF to editable Word documents</p>
+      </div>
+      <div class="tool-card" data-category="convert">
+        <div class="tool-icon">📊</div>
+        <h3>PDF to Excel</h3>
+        <p>Extract data from PDF to Excel spreadsheets</p>
+      </div>
+      <div class="tool-card" data-category="convert">
+        <div class="tool-icon">📽️</div>
+        <h3>PDF to PowerPoint</h3>
+        <p>Transform PDFs into editable presentations</p>
+      </div>
+      <div class="tool-card" data-category="convert">
+        <div class="tool-icon">🖼️</div>
+        <h3>PDF to JPG</h3>
+        <p>Convert PDF pages to JPG images</p>
+      </div>
+      <div class="tool-card" data-category="convert">
+        <div class="tool-icon">📱</div>
+        <h3>PDF to HTML</h3>
+        <p>Convert PDFs to web-friendly HTML format</p>
+      </div>
+      <div class="tool-card" data-category="edit">
+        <div class="tool-icon">✏️</div>
+        <h3>Edit PDF</h3>
+        <p>Modify text and images in your PDF files</p>
+      </div>
+      <div class="tool-card" data-category="merge & split">
+        <div class="tool-icon">🔗</div>
+        <h3>Merge PDF</h3>
+        <p>Combine multiple PDFs into a single document</p>
+      </div>
+      <div class="tool-card" data-category="merge & split">
+        <div class="tool-icon">✂️</div>
+        <h3>Split PDF</h3>
+        <p>Separate PDF pages into individual files</p>
+      </div>
+      <div class="tool-card" data-category="security">
+        <div class="tool-icon">🔒</div>
+        <h3>Protect PDF</h3>
+        <p>Add password protection to your PDFs</p>
+      </div>
+      <div class="tool-card" data-category="security">
+        <div class="tool-icon">🔓</div>
+        <h3>Unlock PDF</h3>
+        <p>Remove password protection from PDFs</p>
+      </div>
+      <div class="tool-card" data-category="optimize">
+        <div class="tool-icon">🗜️</div>
+        <h3>Compress PDF</h3>
+        <p>Reduce file size while preserving quality</p>
+      </div>
+      <div class="tool-card" data-category="edit">
+        <div class="tool-icon">📝</div>
+        <h3>Add Watermark</h3>
+        <p>Insert text or image watermarks to PDFs</p>
+      </div>
+      <div class="tool-card" data-category="convert">
+        <div class="tool-icon">🔍</div>
+        <h3>OCR PDF</h3>
+        <p>Make scanned PDFs searchable with OCR</p>
+      </div>
+      <div class="tool-card" data-category="edit">
+        <div class="tool-icon">🖋️</div>
+        <h3>e-Sign PDF</h3>
+        <p>Add electronic signatures to your PDFs</p>
+      </div>
+      <div class="tool-card" data-category="optimize">
+        <div class="tool-icon">📄</div>
+        <h3>PDF to PDF/A</h3>
+        <p>Convert PDFs to PDF/A for long-term archiving</p>
+      </div>
+      <div class="tool-card" data-category="edit">
+        <div class="tool-icon">🔢</div>
+        <h3>Page Numbers</h3>
+        <p>Add custom page numbers to your PDF</p>
+      </div>
+      <div class="tool-card" data-category="convert">
+        <div class="tool-icon">📰</div>
+        <h3>PDF to Text</h3>
+        <p>Extract text content from PDF files</p>
+      </div>
+      <div class="tool-card" data-category="edit">
+        <div class="tool-icon">🔄</div>
+        <h3>Rotate PDF</h3>
+        <p>Change the orientation of PDF pages</p>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="container">
+      <p>&copy; 2023 iLovePDF. All rights reserved. | <a href="/privacy">Privacy Policy</a> | <a href="/terms">Terms of Service</a></p>
+    </div>
+  </footer>
+
+<script>
+  // Search functionality
+  const searchInput = document.querySelector('.search-bar input');
+  const searchButton = document.querySelector('.search-bar button');
+  const toolCards = document.querySelectorAll('.tool-card');
+
+  function performSearch() {
+    const searchTerm = searchInput.value.toLowerCase();
+    toolCards.forEach(card => {
+      const toolName = card.querySelector('h3').textContent.toLowerCase();
+      const toolDescription = card.querySelector('p').textContent.toLowerCase();
+      if (toolName.includes(searchTerm) || toolDescription.includes(searchTerm)) {
+        card.style.display = 'block';
+      } else {
+        card.style.display = 'none';
+      }
+    });
+  }
+
+  searchButton.addEventListener('click', performSearch);
+  searchInput.addEventListener('keyup', (e) => {
+    if (e.key === 'Enter') {
+      performSearch();
+    }
+  });
+
+  // Category filter functionality
+  const categoryButtons = document.querySelectorAll('.category-button');
+
+  categoryButtons.forEach(button => {
+    button.addEventListener('click', () => {
+      const category = button.textContent.toLowerCase();
+
+      categoryButtons.forEach(btn => btn.classList.remove('active'));
+      button.classList.add('active');
+
+      toolCards.forEach(card => {
+        if (category === 'all' || card.dataset.category === category) {
+          card.style.display = 'block';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    });
+  });
+
+  // Tool card click handler
+  const toolLinks = {
+    'PDF to Word': 'https://www.ilovepdf.com/pdf_to_word',
+    'PDF to Excel': 'https://www.ilovepdf.com/pdf_to_excel',
+    'PDF to PowerPoint': 'https://www.ilovepdf.com/pdf_to_powerpoint',
+    'PDF to JPG': 'https://www.ilovepdf.com/pdf_to_jpg',
+    'PDF to HTML': 'https://www.ilovepdf.com/pdf_to_html',
+    'Edit PDF': 'https://www.ilovepdf.com/edit_pdf',
+    'Merge PDF': 'https://www.ilovepdf.com/merge_pdf',
+    'Split PDF': 'https://www.ilovepdf.com/split_pdf',
+    'Protect PDF': 'https://www.ilovepdf.com/protect_pdf',
+    'Unlock PDF': 'https://www.ilovepdf.com/unlock_pdf',
+    'Compress PDF': 'https://www.ilovepdf.com/compress_pdf',
+    'Add Watermark': 'https://www.ilovepdf.com/add_watermark',
+    'OCR PDF': 'https://www.ilovepdf.com/ocr_pdf',
+    'e-Sign PDF': 'https://www.ilovepdf.com/sign_pdf',
+    'PDF to PDF/A': 'https://www.ilovepdf.com/pdf_to_pdfa',
+    'Page Numbers': 'https://www.ilovepdf.com/add_page_numbers',
+    'PDF to Text': 'https://www.ilovepdf.com/pdf_to_text',
+    'Rotate PDF': 'https://www.ilovepdf.com/rotate_pdf'
+  };
+
+  toolCards.forEach(card => {
+    card.addEventListener('click', () => {
+      const toolName = card.querySelector('h3').textContent;
+      window.location.href = toolLinks[toolName];
+    });
+  });
+</script>
+
+</body></html>

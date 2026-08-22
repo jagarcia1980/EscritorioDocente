@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lección: La Fotosíntesis</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+    <nav class="bg-indigo-700 p-4 text-white shadow-lg">
+        <div class="container mx-auto flex flex-wrap justify-between items-center">
+            <h1 class="text-xl font-bold mb-2 md:mb-0"><i class="fas fa-leaf mr-2"></i> Unidad: La Magia de la Fotosíntesis</h1>
+            <button id="toggleMenu" class="md:hidden text-2xl"><i class="fas fa-bars"></i></button>
+            <div id="navMenu" class="hidden md:flex flex-col md:flex-row md:space-x-4 mt-2 md:mt-0 w-full md:w-auto">
+                <a href="#objetivos" class="block py-2 px-3 hover:bg-indigo-600 rounded transition duration-200 ease-in-out">Objetivos</a>
+                <a href="#introduccion" class="block py-2 px-3 hover:bg-indigo-600 rounded transition duration-200 ease-in-out">Introducción</a>
+                <a href="#como-funciona" class="block py-2 px-3 hover:bg-indigo-600 rounded transition duration-200 ease-in-out">¿Cómo funciona?</a>
+                <a href="#importancia" class="block py-2 px-3 hover:bg-indigo-600 rounded transition duration-200 ease-in-out">Su Importancia</a>
+                <a href="#ejercicios" class="block py-2 px-3 hover:bg-indigo-600 rounded transition duration-200 ease-in-out">Ejercicios</a>
+                <a href="#bibliografia" class="block py-2 px-3 hover:bg-indigo-600 rounded transition duration-200 ease-in-out">Bibliografía</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container mx-auto px-4 py-8">
+        <header class="bg-white p-8 rounded-xl shadow-sm mb-8 border-l-8 border-indigo-500">
+            <h2 class="text-4xl font-extrabold text-gray-900">Tema: ¡La Fotosíntesis, el Secreto Verde de las Plantas!</h2>
+            <p class="text-gray-600 mt-2 text-lg italic">"Las plantas son el pulmón de nuestro planeta, ¡y la fotosíntesis es su respiración mágica!"</p>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            
+            <div class="md:col-span-2 space-y-8"> 
+                <section id="objetivos" class="bg-white p-6 rounded-lg shadow-sm">
+                    <h3 class="text-2xl font-bold mb-4 text-indigo-700"><i class="fas fa-bullseye mr-2"></i> Objetivos de Aprendizaje</h3>
+                    <p class="text-gray-700 leading-relaxed mb-3">Al finalizar esta lección, nuestros pequeños científicos serán capaces de:</p>
+                    <ul class="list-disc ml-5 space-y-2 text-gray-700">
+                        <li>Explicar qué es la fotosíntesis utilizando palabras sencillas y comprensibles.</li>
+                        <li>Identificar y nombrar los "ingredientes" esenciales que las plantas necesitan para llevar a cabo la fotosíntesis.</li>
+                        <li>Comprender la importancia fundamental de la fotosíntesis, no solo para las plantas, sino para la vida de todos los seres vivos en la Tierra.</li>
+                        <li>Reconocer la necesidad de cuidar las plantas y el medio ambiente como una acción clave para nuestra salud y la del planeta.</li>
+                    </ul>
+                </section>
+
+                <section id="introduccion" class="bg-white p-6 rounded-lg shadow-sm">
+                    <h3 class="text-2xl font-bold mb-4 text-indigo-700"><i class="fas fa-seedling mr-2"></i> 1. ¡Hola, Pequeños Científicos! ¿Qué es la Fotosíntesis?</h3>
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a8/Plant_leaf.jpg/800px-Plant_leaf.jpg" alt="Una hoja verde de una planta" class="w-full h-64 object-cover rounded-lg mb-4 shadow-md">
+                    <p class="text-gray-700 leading-relaxed mb-4">
+                        ¿Alguna vez te has preguntado cómo las plantas se alimentan si no van al supermercado, no tienen nevera ni cocinan en una estufa como nosotros? ¡Pues tienen un súper poder secreto y una cocina mágica muy especial! Se llama <strong>fotosíntesis</strong>. Es una palabra un poco larga y puede sonar complicada, pero verás que es un proceso fascinante y muy fácil de entender.
+                    </p>
+                    <p class="text-gray-700 leading-relaxed mb-4">
+                        Imagina que las plantas son pequeños chefs que, en lugar de usar sartenes y ollas, utilizan la luz del sol como energía. Con esta energía, y mezclando agua que absorben por sus raíces con un gas que está en el aire llamado dióxido de carbono, ¡preparan su propia comida! Esta comida es un tipo de azúcar que les da energía para crecer y vivir.
+                    </p>
+                    <p class="text-gray-700 leading-relaxed">
+                        Pero eso no es todo, ¡hay algo aún más sorprendente! Como "subproducto" o "regalo" de esta cocina mágica, las plantas liberan al aire un gas muy importante: el <strong>oxígeno</strong>. ¿Y sabes quién necesita el oxígeno? ¡Exacto, nosotros y casi todos los animales para poder respirar y vivir! Así que, la fotosíntesis no solo alimenta a las plantas, ¡sino que nos da el aire que necesitamos! Es por esto que la fotosíntesis es fundamental para la vida en la Tierra.
+                    </p>
+                </section>
+
+                <section id="como-funciona" class="space-y-4">
+                    <h3 class="text-2xl font-bold mb-4 text-indigo-700"><i class="fas fa-flask mr-2"></i> 2. La Receta Secreta de las Plantas: ¿Cómo Funciona la Fotosíntesis?</h3>
+
+                    <div class="border rounded-lg bg-white">
+                        <button class="accordion w-full p-4 text-left font-bold flex justify-between items-center hover:bg-gray-50 text-indigo-800">
+                            <i class="fas fa-hand-holding-water mr-2"></i> ¿Qué Ingredientes Necesitan las Plantas? <i class="fas fa-chevron-down ml-auto"></i>
+                        </button>
+                        <div class="panel p-4 border-t hidden text-gray-700">
+                            <p class="mb-3">Para que las plantas puedan hacer su comida, necesitan reunir tres ingredientes principales, ¡como un chef necesita sus cosas para cocinar una deliciosa receta!</p>
+                            <ul class="list-disc ml-5 space-y-2 mb-4">
+                                <li><strong>Luz del Sol:</strong> Es el ingrediente más importante y la fuente de energía. Imagina que es como el "combustible" o la "electricidad" que enciende el horno de la planta. Las plantas capturan esta luz con sus hojas, ¡por eso las ves buscando el sol!</li>
+                                <li><strong>Agua:</strong> La absorben principalmente por sus raíces del suelo, como si fuera una pajita gigante. El agua viaja por unos "tubitos" dentro de la planta hasta llegar a las hojas.</li>
+                                <li><strong>Dióxido de Carbono (CO2):</strong> Es un gas que está presente en el aire que nos rodea. Nosotros, al respirar, exhalamos dióxido de carbono, y las plantas lo aprovechan. Lo toman por unos pequeños "agujeritos" o "bocas" que tienen en sus hojas, llamados estomas, que son tan pequeños que no los podemos ver a simple vista.</li>
+                            </ul>
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/The_Sun_by_the_Atmospheric_Imaging_Assembly_of_NASA%27s_Solar_Dynamics_Observatory_-_20100819.jpg/640px-The_Sun_by_the_Atmospheric_Imaging_Assembly_of_NASA%27s_Solar_Dynamics_Observatory_-_20100819.jpg" alt="El Sol brillando en el espacio" class="w-full h-48 object-cover rounded-lg mb-2 shadow-sm">
+                            <p class="text-sm text-gray-500 text-center">La luz del sol es la energía principal que las plantas necesitan.</p>
+                        </div>
+                    </div>
+
+                    <div class="border rounded-lg bg-white">
+                        <button class="accordion w-full p-4 text-left font-bold flex justify-between items-center hover:bg-gray-50 text-indigo-800">
+                            <i class="fas fa-tree mr-2"></i> ¿Dónde Ocurre la Magia? ¡Principalmente en las Hojas! <i class="fas fa-chevron-down ml-auto"></i>
+                        </button>
+                        <div class="panel p-4 border-t hidden text-gray-700">
+                            <p class="mb-3">La mayor parte de la fotosíntesis, esa "cocina" especial, ocurre en las hojas de las plantas. ¿Alguna vez te has preguntado por qué casi todas las hojas son verdes? ¡Eso es por una sustancia muy especial llamada <strong>clorofila</strong>!</p>
+                            <p class="mb-4">La clorofila es el "súper captador" de luz. Es como una pequeña antena que atrae y absorbe la energía del sol. Además de ser crucial para la fotosíntesis, la clorofila es la que le da a las plantas su hermoso color verde característico. Dentro de las células de las hojas, hay unas "mini-fábricas" aún más pequeñas llamadas <strong>cloroplastos</strong>, ¡y ahí es donde se lleva a cabo toda la acción de la fotosíntesis!</p>
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/Water_Droplets_on_a_Leaf.jpg/800px-Water_Droplets_on_a_Leaf.jpg" alt="Gotas de agua sobre una hoja verde" class="w-full h-48 object-cover rounded-lg mb-2 shadow-sm">
+                            <p class="text-sm text-gray-500 text-center">Las hojas, con ayuda del agua, son el lugar donde ocurre la fotosíntesis.</p>
+                        </div>
+                    </div>
+
+                    <div class="border rounded-lg bg-white">
+                        <button class="accordion w-full p-4 text-left font-bold flex justify-between items-center hover:bg-gray-50 text-indigo-800">
+                            <i class="fas fa-chart-line mr-2"></i> El Proceso Paso a Paso: ¡La Gran Transformación! <i class="fas fa-chevron-down ml-auto"></i>
+                        </button>
+                        <div class="panel p-4 border-t hidden text-gray-700">
+                            <p class="mb-3">Una vez que la planta ha conseguido todos sus ingredientes, ¡empieza la gran transformación! Es como una pequeña fábrica química trabajando sin parar:</p>
+                            <ol class="list-decimal ml-5 space-y-2 mb-4">
+                                <li><strong>Captura de Luz:</strong> La clorofila, que está en las hojas, absorbe la energía de la luz del sol. ¡Es el motor que lo pone todo en marcha!</li>
+                                <li><strong>Absorción de Agua y Dióxido de Carbono:</strong> Al mismo tiempo, las raíces absorben el agua del suelo y las hojas toman el dióxido de carbono del aire a través de sus pequeños estomas.</li>
+                                <li><strong>La Reacción Mágica:</strong> Con la energía del sol, el agua y el dióxido de carbono se combinan y se transforman dentro de los cloroplastos. Es una reacción química muy especial.</li>
+                                <li><strong>Producción de Alimento y Oxígeno:</strong> El resultado de esta "receta" es doble. Por un lado, se produce azúcar (glucosa), que es el alimento y la energía que la planta usa para crecer. Por otro lado, se produce oxígeno, que la planta no necesita y que libera al aire para que nosotros y los animales podamos respirarlo.</li>
+                            </ol>
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Photosynthesis_simple.svg/640px-Photosynthesis_simple.svg.png" alt="Diagrama simple de fotosíntesis con sol, agua, CO2, glucosa y oxígeno" class="w-full h-auto object-contain rounded-lg mb-2 shadow-sm">
+                            <p class="text-sm text-gray-500 text-center">Este diagrama sencillo muestra cómo la luz, el agua y el CO2 se convierten en alimento y oxígeno.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="importancia" class="bg-white p-6 rounded-lg shadow-sm">
+                    <h3 class="text-2xl font-bold mb-4 text-indigo-700"><i class="fas fa-globe-americas mr-2"></i> 3. ¿Por Qué es Tan Importante la Fotosíntesis para Todos?</h3>
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b3/Forest_in_Silesia.jpg/800px-Forest_in_Silesia.jpg" alt="Un bosque verde y frondoso lleno de árboles" class="w-full h-64 object-cover rounded-lg mb-4 shadow-md">
+                    <p class="text-gray-700 leading-relaxed mb-4">
+                        La fotosíntesis no es solo una curiosidad científica; ¡es un proceso absolutamente vital para todo nuestro planeta y para todos nosotros, incluyendo a los animales! Aquí te contamos por qué es tan increíblemente importante:
+                    </p>
+                    <ul class="list-disc ml-5 space-y-2 text-gray-700 mb-4">
+                        <li><strong>El Alimento de las Plantas (y de casi todo el mundo):</strong> Gracias a la fotosíntesis, las plantas pueden fabricar su propio alimento. Esto les permite crecer, producir flores, frutos y semillas. ¿Y qué pasa con los animales? Los animales que comen plantas (como vacas, conejos o insectos) obtienen su energía directamente de ellas. Y los animales que comen a otros animales (como un lobo que come un conejo) también dependen indirectamente de las plantas. ¡Así que, al final, toda la cadena alimenticia empieza con la fotosíntesis!</li>
+                        <li><strong>El Aire que Respiramos:</strong> ¿Recuerdas que las plantas liberan oxígeno al aire? ¡Ese oxígeno es el que nosotros, y la mayoría de los animales, necesitamos para vivir! Cada vez que respiras, estás tomando oxígeno que fue producido por una planta gracias a la fotosíntesis. Sin plantas y sin fotosíntesis, no tendríamos suficiente oxígeno para respirar en la atmósfera.</li>
+                        <li><strong>Limpieza del Aire:</strong> Además de darnos oxígeno, las plantas hacen otro trabajo muy importante: absorben el dióxido de carbono del aire. El dióxido de carbono es un gas que, en grandes cantidades, puede ser perjudicial para el planeta y para nosotros. Al usarlo para la fotosíntesis, las plantas nos ayudan a limpiar el aire y a mantener un equilibrio saludable en nuestra atmósfera.</li>
+                        <li><strong>Regulación del Clima:</strong> Al absorber dióxido de carbono, las plantas también juegan un papel crucial en la regulación del clima global, ayudando a controlar la temperatura del planeta.</li>
+                    </ul>
+                    <p class="text-gray-700 leading-relaxed">
+                        ¡Por eso es tan importante cuidar los árboles, las flores, los cultivos y todas las plantas que nos rodean! Son nuestras pequeñas y silenciosas fábricas de vida, alimento y aire puro. Plantar un árbol o cuidar tu jardín es una forma maravillosa de contribuir a la salud de nuestro planeta.
+                    </p>
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/f6/Child_planting_a_tree.jpg/800px-Child_planting_a_tree.jpg" alt="Niño plantando un árbol joven en la tierra" class="w-full h-64 object-cover rounded-lg mt-4 shadow-md">
+                    <p class="text-sm text-gray-500 text-center mt-2">Plantar un árbol es una forma maravillosa de ayudar al planeta y a la fotosíntesis.</p>
+                </section>
+
+                <section id="ejercicios" class="bg-white p-6 rounded-lg shadow-sm">
+                    <h3 class="text-2xl font-bold mb-4 text-indigo-700"><i class="fas fa-pencil-alt mr-2"></i> 4. ¡A Practicar! Ejercicios de Fotosíntesis</h3>
+                    <p class="text-gray-700 leading-relaxed mb-4">
+                        ¡Es hora de poner a prueba lo que has aprendido sobre la fotosíntesis! Lee cada pregunta con atención y piensa en la respuesta. Cuando estés listo para ver si has acertado, haz clic en el botón "Ver Solución". ¡Mucha suerte, pequeños científicos!
+                    </p>
+
+                    <!-- Ejercicio 1 -->
+                    <div class="mb-6 p-4 border border-gray-200 rounded-lg bg-gray-50">
+                        <p class="font-semibold text-gray-800 mb-2"><strong>Pregunta 1:</strong> ¿Cuál es el nombre del proceso que usan las plantas para fabricar su propio alimento?</p>
+                        <ul class="list-disc ml-5 text-gray-700 mb-3">
+                            <li>a) Digestión</li>
+                            <li>b) Respiración</li>
+                            <li>c) Fotosíntesis</li>
+                            <li>d) Alimentación</li>
+                        </ul>
+                        <button class="show-solution bg-indigo-500 text-white py-2 px-4 rounded hover:bg-indigo-600 transition duration-300 ease-in-out text-sm">Ver Solución</button>
+                        <div class="solution hidden mt-3 p-3 bg-green-100 text-green-800 border border-green-200 rounded">
+                            <p><strong>Solución:</strong> c) Fotosíntesis</p>
+                        </div>
+                    </div>
+
+                    <!-- Ejercicio 2 -->
+                    <div class="mb-6 p-4 border border-gray-200 rounded-lg bg-gray-50">
+                        <p class="font-semibold text-gray-800 mb-2"><strong>Pregunta 2:</strong> Nombra los tres ingredientes principales que una planta necesita para hacer la fotosíntesis.</p>
+                        <button class="show-solution bg-indigo-500 text-white py-2 px-4 rounded hover:bg-indigo-600 transition duration-300 ease-in-out text-sm">Ver Solución</button>
+                        <div class="solution hidden mt-3 p-3 bg-green-100 text-green-800 border border-green-200 rounded">
+                            <p><strong>Solución:</strong> Luz del sol, agua y dióxido de carbono.</p>
+                        </div>
+                    </div>
+
+                    <!-- Ejercicio 3 -->
+                    <div class="mb-6 p-4 border border-gray-200 rounded-lg bg-gray-50">
+                        <p class="font-semibold text-gray-800 mb-2"><strong>Pregunta 3:</strong> ¿Qué gas muy importante liberan las plantas al aire después de hacer la fotosíntesis, y que nosotros y los animales necesitamos para vivir?</p>
+                        <button class="show-solution bg-indigo-500 text-white py-2 px-4 rounded hover:bg-indigo-600 transition duration-300 ease-in-out text-sm">Ver Solución</button>
+                        <div class="solution hidden mt-3 p-3 bg-green-100 text-green-800 border border-green-200 rounded">
+                            <p><strong>Solución:</strong> Oxígeno.</p>
+                        </div>
+                    </div>
+
+                    <!-- Ejercicio 4 -->
+                    <div class="mb-6 p-4 border border-gray-200 rounded-lg bg-gray-50">
+                        <p class="font-semibold text-gray-800 mb-2"><strong>Pregunta 4:</strong> ¿Qué color le da a las plantas la clorofila, y por qué es importante esta sustancia en la fotosíntesis?</p>
+                        <button class="show-solution bg-indigo-500 text-white py-2 px-4 rounded hover:bg-indigo-600 transition duration-300 ease-in-out text-sm">Ver Solución</button>
+                        <div class="solution hidden mt-3 p-3 bg-green-100 text-green-800 border border-green-200 rounded">
+                            <p><strong>Solución:</strong> Le da el color verde. Es importante porque es la encargada de capturar la energía de la luz del sol.</p>
+                        </div>
+                    </div>
+
+                    <!-- Ejercicio 5 -->
+                    <div class="mb-6 p-4 border border-gray-200 rounded-lg bg-gray-50">
+                        <p class="font-semibold text-gray-800 mb-2"><strong>Pregunta 5:</strong> Verdadero o Falso: Las plantas hacen fotosíntesis tanto de día como de noche.</p>
+                        <button class="show-solution bg-indigo-500 text-white py-2 px-4 rounded hover:bg-indigo-600 transition duration-300 ease-in-out text-sm">Ver Solución</button>
+                        <div class="solution hidden mt-3 p-3 bg-green-100 text-green-800 border border-green-200 rounded">
+                            <p><strong>Solución:</strong> Falso. Las plantas necesitan la luz del sol para la fotosíntesis, por lo que la hacen principalmente durante el día. Por la noche, realizan un proceso diferente llamado respiración.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="bibliografia" class="bg-white p-6 rounded-lg shadow-sm">
+                    <h3 class="text-2xl font-bold mb-4 text-indigo-700"><i class="fas fa-book-open mr-2"></i> 5. Bibliografía y Referencias</h3>
+                    <p class="text-gray-700 leading-relaxed mb-3">
+                        Para la elaboración de esta lección didáctica sobre la fotosíntesis, se han consultado y adaptado contenidos de diversas fuentes educativas y científicas, buscando la claridad y adecuación para alumnos de primaria. Aquí tienes algunas referencias y recursos si deseas profundizar más en este fascinante tema:
+                    </p>
+                    <ul class="list-disc ml-5 space-y-2 text-gray-700">
+                        <li>National Geographic Kids. (n.d.). <em>Photosynthesis.</em> Recuperado de <a href="https://kids.nationalgeographic.com/science/article/photosynthesis" target="_blank" class="text-indigo-600 hover:underline">https://kids.nationalgeographic.com/science/article/photosynthesis</a> (Recurso educativo adaptado para niños).</li>
+                        <li>Khan Academy Kids. (n.d.). <em>Plant Parts and Photosynthesis.</em> Se recomienda buscar vídeos o artículos de Khan Academy en su sección de ciencias para niños o nivel básico sobre el tema de las plantas y la fotosíntesis. Ejemplo de búsqueda: <a href="https://www.youtube.com/results?search_query=fotosintesis+khan+academy+niños" target="_blank" class="text-indigo-600 hover:underline">Vídeos de Fotosíntesis para niños en YouTube (Khan Academy)</a>.</li>
+                        <li>Ministerio de Educación y Formación Profesional de España. (Varias publicaciones). <em>Materiales curriculares y recursos didácticos para Educación Primaria.</em> (Referencia general a los currículos y materiales educativos oficiales).</li>
+                        <li>Wikimedia Commons. (n.d.). <em>Imágenes relacionadas con Fotosíntesis y botánica.</em> Recuperado de <a href="https://commons.wikimedia.org/wiki/Category:Photosynthesis" target="_blank" class="text-indigo-600 hover:underline">https://commons.wikimedia.org/wiki/Category:Photosynthesis</a> (Fuente de imágenes de dominio público y licencia abierta utilizadas en esta lección).</li>
+                        <li>Happy Learning Español. (2014). <em>La Fotosíntesis | El Cactus y la Fotosíntesis.</em> [Archivo de video]. Recuperado de <a href="https://www.youtube.com/watch?v=D1IBs75Uqds" target="_blank" class="text-indigo-600 hover:underline">https://www.youtube.com/watch?v=D1IBs75Uqds</a> (Video educativo recomendado).</li>
+                    </ul>
+                    <p class="text-gray-700 leading-relaxed mt-4">
+                        Es importante recordar que el conocimiento científico se construye y se actualiza constantemente. Estas referencias son un excelente punto de partida para seguir explorando el fascinante mundo de la fotosíntesis y el reino vegetal.
+                    </p>
+                </section>
+
+            </div>
+
+            <aside class="space-y-6">
+                <div class="bg-indigo-900 text-white p-6 rounded-xl">
+                    <h4 class="font-bold text-lg mb-4"><i class="fas fa-lightbulb mr-2"></i> ¿Sabías que...? Datos Curiosos</h4>
+                    <p class="mb-3">
+                        ¡Las plantas son como los pulmones gigantes de la Tierra! Producen el oxígeno que respiramos y absorben el dióxido de carbono que exhalamos, manteniendo el aire limpio y fresco.
+                    </p>
+                    <p class="mb-3">
+                        Una sola hoja de un árbol puede tener millones de pequeñas "fábricas" de fotosíntesis (los cloroplastos) trabajando al mismo tiempo. ¡Es un trabajo en equipo increíble!
+                    </p>
+                    <p>
+                        No todas las plantas son verdes. Algunas plantas tienen otros pigmentos (colores) que ocultan la clorofila, pero aun así, ¡siguen haciendo fotosíntesis!
+                    </p>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-green-500">
+                    <h4 class="font-bold text-lg mb-4 text-gray-900"><i class="fas fa-video mr-2"></i> Video Recomendado</h4>
+                    <p class="text-gray-700 mb-4">
+                        ¿Quieres ver la fotosíntesis en acción y de una forma muy divertida? Mira este video para entender aún mejor cómo las plantas hacen su magia:
+                    </p>
+                    <a href="https://www.youtube.com/watch?v=D1IBs75Uqds" target="_blank" class="block bg-green-600 text-white p-3 rounded text-center hover:bg-green-700 transition duration-300 ease-in-out">
+                        <i class="fab fa-youtube mr-2"></i> Ver Video: La Fotosíntesis
+                    </a>
+                    <p class="text-xs text-gray-500 mt-2 text-center">Enlace externo a YouTube (El Cactus y la Fotosíntesis - Happy Learning)</p>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-yellow-500">
+                    <h4 class="font-bold text-lg mb-4 text-gray-900"><i class="fas fa-seedling mr-2"></i> ¡Cuida tus Plantas!</h4>
+                    <p class="text-gray-700 mb-4">
+                        Ahora que sabes lo importantes que son las plantas para la vida en la Tierra, ¿qué puedes hacer tú para ayudarlas y protegerlas?
+                    </p>
+                    <ul class="list-disc ml-5 space-y-2 text-gray-700">
+                        <li>Riégalas cuando lo necesiten, ¡el agua es su bebida favorita!</li>
+                        <li>Asegúrate de que reciban suficiente luz, ¡es su energía!</li>
+                        <li>No arranques las hojas o flores de las plantas sin razón.</li>
+                        <li>¡Planta un árbol o una flor en tu jardín o en una maceta si puedes!</li>
+                        <li>Ayuda a mantener limpios los parques y bosques, para que las plantas puedan crecer felices.</li>
+                    </ul>
+                </div>
+            </aside>
+        </div>
+    </main>
+
+    <footer class="bg-gray-800 text-white text-center p-4 mt-8">
+        <p class="text-sm">Generado con Thanos. Powered by Gemini pro.</p>
+    </footer>
+
+    <script>
+        $(document).ready(function(){
+            // Lógica del acordeón
+            $(".accordion").click(function(){
+                $(this).next(".panel").slideToggle();
+                $(this).find("i").toggleClass("fa-chevron-down fa-chevron-up");
+            });
+
+            // Lógica para el menú responsive
+            $("#toggleMenu").click(function(){
+                $("#navMenu").slideToggle();
+            });
+
+            // Lógica para mostrar/ocultar soluciones de ejercicios
+            $(".show-solution").click(function(){
+                $(this).next(".solution").slideToggle();
+                // Opcional: Cambiar texto del botón
+                var buttonText = $(this).text();
+                if (buttonText === "Ver Solución") {
+                    $(this).text("Ocultar Solución");
+                } else {
+                    $(this).text("Ver Solución");
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Escritorio Docente - v3.7.1</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="https://apis.google.com/js/api.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui-touch-punch/0.2.3/jquery.ui.touch-punch.min.js"></script>
+
+    <style>
+        :root { --bg-current: url('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1920&q=80'); }
+        body, html { height: 100%; margin: 0; overflow: hidden; font-family: 'Segoe UI', sans-serif; background: #1a252f; }
+        
+        #login-screen { height: 100vh; display: flex; justify-content: center; align-items: center; color: white; flex-direction: column; z-index: 1000; position: relative; background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d); }
+        #desktop { height: 100vh; background: var(--bg-current) no-repeat center center scroll; background-size: cover; display: none; position: relative; }
+        #icon-container { position: absolute; top: 0; left: 0; right: 0; bottom: 50px; overflow: hidden; }
+
+        .icon { width: 100px; text-align: center; color: white; text-shadow: 0px 2px 4px rgba(0,0,0,0.8); cursor: pointer; padding: 10px 5px; border-radius: 12px; z-index: 10; transition: background 0.2s; user-select: none; }
+        .icon:hover { background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(5px); }
+        .icon i { font-size: 45px; display: block; margin-bottom: 5px; pointer-events: none; }
+        .icon span { font-size: 13px; font-weight: 500; display: block; word-wrap: break-word; line-height: 1.2; pointer-events: none; }
+        
+        .delete-btn { position: absolute; top: -5px; right: -5px; background: #ff4444; color: white; border-radius: 50%; width: 22px; height: 22px; line-height: 18px; text-align: center; display: none; border: 2px solid white; z-index: 20; }
+        .icon:hover .delete-btn { display: block; }
+
+        .icon.note { width: 220px; min-height: 180px; padding: 25px 15px 15px 15px; border-radius: 2px 2px 15px 2px; box-shadow: 4px 6px 15px rgba(0,0,0,0.4); color: #333; text-shadow: none; text-align: left; cursor: grab; display: flex; flex-direction: column; }
+        .icon.note:active { cursor: grabbing; }
+        .icon.note:hover { background-color: inherit; backdrop-filter: none; filter: brightness(0.50); }
+        .icon.note .delete-btn { top: 4px; right: 4px; border: none; background: transparent; color: #555; font-size: 20px; box-shadow: none; font-weight: bold; }
+        .icon.note .delete-btn:hover { color: #ff0000; }
+        .note-yellow { background: #ffeb3b; }
+        .note-pink { background: #f8bbd0; }
+        .note-green { background: #c8e6c9; }
+        .note-blue { background: #b3e5fc; }
+        .note-content { font-family: 'Comic Sans MS', 'Segoe Print', sans-serif; font-size: 14px; line-height: 1.4; overflow-y: auto; flex-grow: 1; }
+        .note-content img { max-width: 100%; height: auto; border-radius: 5px; }
+
+        .window { background: white; border-radius: 8px; position: absolute; box-shadow: 0 20px 50px rgba(0,0,0,0.5); display: flex; flex-direction: column; overflow: hidden; }
+        .window-header { background: #f8f9fa; padding: 8px 15px; display: flex; justify-content: space-between; align-items: center; cursor: move; border-bottom: 1px solid #eee; font-weight: 600; font-size: 14px; }
+        .window-content { flex-grow: 1; height: 100%; background: white; position: relative; overflow-y: auto; overflow-x: hidden; }
+        iframe { width: 100%; height: 100%; border: none; display: block; }
+
+        .folder-item { transition: background 0.2s; border-radius: 8px; user-select: none; position: relative; }
+        .folder-item:hover { background: rgba(0,0,0,0.08); }
+        .delete-folder-item { position:absolute; top:-2px; right:5px; background:#ff4444; color:white; border-radius:50%; width:18px; height:18px; font-size:14px; line-height:16px; cursor:pointer; display:none; }
+        .folder-item:hover .delete-folder-item { display:block; }
+
+        .taskbar { background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); height: 50px; border-top: 1px solid rgba(255,255,255,0.1); position: fixed; bottom: 0; width: 100%; z-index: 5000; display: flex; align-items: center; padding: 0 15px; }
+        #status-bar { font-family: 'Consolas', monospace; font-size: 12px; color: #00ffcc; margin-left: 20px; white-space: nowrap; overflow: hidden; max-width: 500px; }
+        .admin-badge { position: fixed; top: 10px; right: 10px; background: #dc3545; color: white; padding: 5px 15px; border-radius: 20px; font-weight: bold; font-size: 12px; z-index: 2000; display: none; opacity: 0.4; pointer-events: none; }
+
+        /* Controles de redimensionamiento de ventanas (esquinas y bordes) */
+        .ui-resizable-handle { position: absolute; font-size: 0.1px; display: block; z-index: 99999; touch-action: none; }
+        .ui-resizable-e { cursor: e-resize; width: 8px; right: -4px; top: 0; height: 100%; }
+        .ui-resizable-s { cursor: s-resize; height: 8px; bottom: -4px; left: 0; width: 100%; }
+        .ui-resizable-se { cursor: se-resize; width: 14px; height: 14px; right: 0; bottom: 0; }
+        .ipad-stamp {
+            position: absolute;
+            top: -30px;
+            right: -40px;
+            width: 95px;
+            height: 95px;
+            border: 4px solid #ff4a4a;
+            border-radius: 50%;
+            color: #ff4a4a;
+            font-family: 'Arial Black', monospace;
+            font-weight: 900;
+            font-size: 11px;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            line-height: 1.2;
+            transform: rotate(15deg);
+            opacity: 0.8;
+            pointer-events: none;
+            z-index: 100;
+            box-shadow: inset 0 0 2px rgba(255,74,74,0.5), 0 0 2px rgba(255,74,74,0.5); /* Simula tinta */
+        }
+        .share-folder-item { position:absolute; top:-2px; left:5px; background:#0d6efd; color:white; border-radius:50%; width:18px; height:18px; font-size:14px; line-height:16px; text-align:center; cursor:pointer; display:none; z-index: 30; }
+        .folder-item:hover .share-folder-item { display:block; }
+    </style>
+</head>
+<body>
+
+    <div class="toast-container position-fixed top-0 end-0 p-3 mt-4" id="toast-container" style="z-index: 6000;"></div>
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="rssOffcanvas" style="z-index: 6000;">
+        <div class="offcanvas-header bg-light border-bottom py-2">
+            <h6 class="offcanvas-title fw-bold"><i class="bi bi-rss-fill text-warning me-1"></i> Noticias Anteriores</h6>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+        </div>
+        <div class="offcanvas-body" id="rss-history-body"></div>
+    </div>
+
+    <div id="admin-indicator" class="admin-badge">MODO ADMINISTRADOR</div>
+
+    <div id="login-screen">
+        <h1 class="display-4 fw-bold mb-4">Escritorio docente</h1>
+        <p class="fw-bold mb-4 text-white-300">Tu espacio docente gratuito y sin registro en cualquier lugar.</p>
+        <div class="d-grid gap-3 col-10 col-md-3 mx-auto">
+            <button id="btn-login" class="btn btn-primary rounded-pill shadow mt-2">Iniciar con Google Drive</button>
+            <button id="btn-guest" class="btn btn-outline-light rounded-pill">Entrar como Invitado (Local)</button>
+            <button onclick="promptAdmin()" class="btn btn-link btn-sm text-white-50 mt-2 text-decoration-none">Acceso administrador</button>
+        </div>
+        <div class="d-grid gap-3 col-10 col-md-3 mx-auto text-center" style="position: relative;"> 
+            <div class="ipad-stamp">Ahora<br>iPad<br>Compatible.</div>
+            <br/><br/><p class="text-white-50 small">Inicia como invitado para mantener tus ficheros 100% privados en tu propio PC. <br/><br/>Inicia con Google Drive para tener tus ficheros accesibles desde cualquier lugar y seguros en tu propia cuenta de Drive.</p>
+            <div id="mobile-redirect-msg" class="mx-auto" style="display: none; background: rgba(0,0,0,0.7); padding: 10px 20px; border-radius: 8px; margin-top: 15px; color: #fff; font-weight: 500;">
+            <div class="spinner-border spinner-border-sm text-light me-2" role="status"></div>
+                Redirigiendo a la versión Lite (Móvil)
+            </div>
+        </div>           
+    </div>
+
+    <div id="desktop">
+        <div id="icon-container"></div>
+        <nav class="taskbar">
+            <div class="d-flex gap-2 align-items-center flex-grow-1">
+                <div class="dropdown me-1">
+                    <button class="btn btn-sm btn-secondary dropdown-toggle" data-bs-toggle="dropdown" id="btn-profile"><i class="bi bi-person-workspace me-1"></i>General</button>
+                    <ul class="dropdown-menu dropdown-menu-dark text-small shadow" id="menu-profile"></ul>
+                </div>
+
+                <button class="btn btn-sm btn-outline-light" onclick="openShortcutModal()">+ Enlace</button>
+                <button class="btn btn-sm btn-outline-warning" onclick="createNewFolder()">+ Carpeta</button>
+                <button class="btn btn-sm btn-outline-success" onclick="openNoteModal()">+ Nota</button>
+                <button class="btn btn-sm btn-outline-info" onclick="checkAndUpload()">📁 Subir</button>
+                
+                <input type="file" id="file-input" style="display:none" onchange="handleUpload(this)">
+                <input type="file" id="public-file-input" style="display:none" onchange="handlePublicUpload(this)">
+                
+                <button id="btn-admin-rss" class="btn btn-sm btn-outline-danger ms-2" style="display:none;" onclick="openAdminRSS()">📰 Admin RSS</button>
+                <button id="btn-admin-avisos" class="btn btn-sm btn-outline-warning ms-1" style="display:none;" onclick="openAppWindow('Gestor de Avisos', 'rss_manager.php', 1000, 700)">🔔 Avisos</button>
+                <div id="status-bar">> Todo listo.</div>
+            </div>
+            <div class="text-white-50 small d-flex align-items-center">
+                <i class="bi bi-puzzle me-3 fs-6" style="cursor:pointer;" onclick="openWidgetsModal()" title="Añadir Widgets"></i>
+                <i class="bi bi-image me-3 fs-6" style="cursor:pointer;" onclick="cycleWallpaper()" title="Cambiar fondo"></i>
+                <i class="bi bi-arrows-fullscreen me-3 fs-6" id="btn-fullscreen" style="cursor:pointer;" onclick="toggleFullScreen()" title="Pantalla completa"></i>
+                <span id="clock" class="me-3">00:00</span>
+                <button class="btn btn-sm btn-danger py-0" onclick="location.reload()">Salir</button>
+            </div>        
+            
+            </nav>
+    </div>
+
+    <div class="modal fade" id="modalProfileSelect" tabindex="-1" data-bs-backdrop="static">
+        <div class="modal-dialog modal-sm modal-dialog-centered">
+            <div class="modal-content text-dark">
+                <div class="modal-header py-2 bg-light">
+                    <h6 class="modal-title fw-bold"><i class="bi bi-person-workspace me-1"></i> Seleccionar Perfil</h6>
+                    <button class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <p class="small mb-3 text-muted">Elige la plantilla de escritorio con la que deseas iniciar sesión:</p>
+                    <select id="modal-login-profile" class="form-select form-select-sm mb-3 text-center fw-bold"></select>
+                    <button class="btn btn-primary w-100 rounded-pill shadow-sm" onclick="confirmLoginProfile()">Continuar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalShortcut" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header py-2"><h6>Nuevo Acceso</h6><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><input type="text" id="sc-name" class="form-control mb-2" placeholder="Nombre del acceso directo"><input type="text" id="sc-url" class="form-control mb-2" placeholder="URL (https://...)"><div class="row g-2 mb-3"><div class="col-6"><label class="form-label small mb-0">Tipo de Contenido:</label><select id="sc-type" class="form-select form-select-sm"><option value="link">Enlace Web</option><option value="html">Aplicación HTML</option></select></div><div class="col-6"><label class="form-label small mb-0">Modo de Apertura:</label><select id="sc-mode" class="form-select form-select-sm"><option value="tab">En Nueva Pestaña</option><option value="window">En Ventana Virtual</option></select></div><div class="col-12 mt-2"><label class="form-label small mb-0">Icono:</label><select id="sc-icon" class="form-select form-select-sm"><option value="bi-globe">🌐 Aplicación web</option><option value="bi-link-45deg">🔗 Enlace</option><option value="bi-youtube">▶️ Video</option><option value="bi-book">📚 Libro</option><option value="bi-calculator">🧮 Calculadora</option><option value="bi-pencil">✏️ Tarea / Apuntes</option><option value="bi-journal-code">💻 Código / Repositorio</option><option value="bi-file-earmark-pdf">📄 Apuntes Doc-PDF</option><option value="bi-image">🖼️ Imagen</option><option value="bi-music-note-beamed">🎵 Audio</option><option value="bi-envelope">✉️ Mensajería o Correo</option><option value="bi-chat-dots">💬 Chat / Foro</option><option value="bi-folder">📁 Carpeta Externa</option><option value="bi-person-circle">👤 Perfil de Usuario</option><option value="bi-geo-alt">📍 Mapa / Ubicación</option><option value="bi-calendar-event">📅 Calendario / Evento</option><option value="bi-cart">🛒 Tienda / E-commerce</option><option value="bi-cloud-arrow-up">☁️ Almacenamiento en la Nube</option><option value="bi-database">🗄️ Base de Datos</option><option value="bi-newspaper">📰 Noticias / Blog</option><option value="bi-file-earmark-slides">📽️ Presentación / Diapositivas</option><option value="bi-file-earmark-spreadsheet">📊 Hoja de Cálculo</option><option value="bi-controller">🎮 Videojuego / Entretenimiento</option><option value="bi-mic">🎙️ Podcast / Grabación</option><option value="bi-braces">⚙️ API / Endpoint</option><option value="bi-ui-radios">📝 Encuesta / Formulario</option><option value="bi-github">🐙 Perfil de GitHub</option><option value="bi-palette">🎨 Diseño / Prototipo (ej. Figma)</option><option value="bi-graph-up">📈 Dashboard / Gráficas</option><option value="bi-shield-lock">🔒 Seguridad / Autenticación</option><option value="bi-download">⬇️ Enlace de Descarga</option><option value="bi-robot">🤖 Inteligencia Artificial</option><option value="bi-camera-video">📹 Videollamada / Reunión</option><option value="bi-shop">🏪 Negocio Local / Empresa</option><option value="bi-terminal">⬛ Consola / Terminal</option><option value="bi-bookmark-star">⭐ Favorito / Destacado</option><option value="bi-hdd-network">🌐 Servidor / Hosting</option><option value="bi-translate">🗣️ Traductor / Idiomas</option><option value="bi-code-slash">👨‍💻 Plataforma de Código (ej. LeetCode, Codecademy)</option><option value="bi-mortarboard">🎓 Curso de Programación</option><option value="bi-puzzle">🧩 Lógica y Algoritmos</option><option value="bi-lightbulb">💡 Tutorial / Guía paso a paso</option><option value="bi-bug">🐛 Práctica de Debugging / Retos</option><option value="bi-joystick">🕹️ Juego Arcade / Retro</option><option value="bi-dpad">👾 Juego de Navegador</option><option value="bi-dice-5">🎲 Juego de Mesa / Rol</option><option value="bi-suit-spade">🃏 Juego de Cartas</option><option value="bi-trophy">🏆 Torneo / Competencia eSports</option><option value="bi-file-word">📝 Documento de Texto (ej. Word, Docs)</option><option value="bi-clipboard-data">📋 Portapapeles / Gestor de Notas</option><option value="bi-printer">🖨️ Herramienta de Impresión / Escáner</option><option value="bi-tools">🛠️ Herramienta TIC / Utilidad</option><option value="bi-easel">👨‍🏫 Pizarra Virtual / Canvas</option><option value="bi-stopwatch">⏱️ Gestión de Tiempo / Productividad</option><option value="bi-phone">📱 Aplicación Móvil (General)</option><option value="bi-ubuntu">🐧 Aplicación Linux</option><option value="bi-pc-display">🖥️ Aplicación de Escritorio (PC)</option><option value="bi-briefcase">💼 Aplicación Corporativa / Negocios</option><option value="bi-box-seam">📦 Paquete de Software / Suite</option><option value="bi-plugin">🔌 Extensión / Complemento</option><option value="bi-smartwatch">⌚ Aplicación para Smartwatch</option><option value="bi-headset-vr">🥽 Aplicación de Realidad Virtual (VR / AR)</option><option value="bi-window-stack">🗂 Repositorio documental</option>
+        </select></div></div><button class="btn btn-primary w-100" onclick="addShortcutFromUI()">Crear</button></div></div></div></div>
+    <div class="modal fade" id="modalNote" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header py-2 bg-warning bg-opacity-25"><h6 class="modal-title fw-bold"><i class="bi bi-sticky text-warning"></i> Nueva Nota</h6><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><label class="form-label small mb-1">Contenido de la nota (acepta HTML):</label><textarea id="note-content" class="form-control mb-3" rows="4" placeholder="Ej: No olvidar..."></textarea><label class="form-label small mb-1">Color:</label><select id="note-color" class="form-select mb-3"><option value="yellow">Amarillo Clásico</option><option value="pink">Rosa</option><option value="green">Verde Menta</option><option value="blue">Azul Cielo</option></select><button class="btn btn-warning w-100 fw-bold" onclick="addNoteFromUI()">Pegar Nota</button></div></div></div></div>
+    <div class="modal fade" id="modalAdminRSS" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header py-2 bg-light"><h6 class="modal-title fw-bold"><i class="bi bi-broadcast"></i> Configurar Canales RSS</h6><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><ul class="list-group mb-3" id="rss-list"></ul><div class="input-group"><input type="text" id="new-rss-url" class="form-control form-control-sm" placeholder="URL del Feed..."><button class="btn btn-success btn-sm" onclick="addRSSChannel()">Añadir</button></div></div></div></div></div>
+    <div class="modal fade" id="modalWidgets" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-md">
+            <div class="modal-content">
+                <div class="modal-header py-2 bg-light">
+                    <h6 class="modal-title fw-bold"><i class="bi bi-puzzle me-1 text-primary"></i> Widgets Disponibles</h6>
+                    <button class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-3">
+                    <div id="widgets-list" class="row g-3"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        const CLIENT_ID = '';
+        const API_KEY = ''; 
+        const APP_ID = '346112448124';
+        const KEY_OFS = "bWVnYWtva287RDI4MTI="; 
+        const SCOPES = 'https://www.googleapis.com/auth/drive.file';
+        
+        let tokenClient, folderId = null, configId = null;
+        let winZIndex = 100, loginMode = 'guest', isDragging = false;
+        
+        let currentProfile = 'General';
+        let pendingLoginMode = null; 
+
+        let adminDataAll = { 'General': { icons: [], rss: [] } };
+        let userDataAll = { 'General': { icons: [], deleted: [] } };
+        
+        let globalAdminIcons = [];
+        let deletedItems = [];
+        let globalAdminRss = []; 
+        let rssCache = {}; 
+        let publicItems = [];
+        
+        const wallpapers = [
+            "url('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1920&q=80')", // Original
+            "url('https://images.unsplash.com/photo-1511497584788-876760111969?auto=format&fit=crop&w=1920&q=80')", // Bosque
+            "url('https://images.unsplash.com/photo-1746950862687-3017c5818710?auto=format&fit=crop&w=1920&q=80')", // Amanecer
+            "url('https://images.unsplash.com/photo-1532274402911-5a369e4c4bb5?auto=format&fit=crop&w=1920&q=80')", // Atardecer
+            "url('https://images.unsplash.com/photo-1500964757637-c85e8a162699?auto=format&fit=crop&w=1920&q=80')"  // Montañas niebla
+        ];
+        
+        // Cargamos el fondo guardado en localStorage (o el 0 por defecto) y lo aplicamos al inicio
+        let currentWpIndex = parseInt(localStorage.getItem('webos_wallpaper') || '0');
+        document.documentElement.style.setProperty('--bg-current', wallpapers[currentWpIndex]);
+
+        function cycleWallpaper() {
+            currentWpIndex = (currentWpIndex + 1) % wallpapers.length;
+            document.documentElement.style.setProperty('--bg-current', wallpapers[currentWpIndex]);
+            localStorage.setItem('webos_wallpaper', currentWpIndex);
+        }
+
+        function setStatus(msg, isError = false) {
+            $('#status-bar').css('color', isError ? '#ff6666' : '#00ffcc').text('> ' + msg);
+        }
+
+        function syncGlobalsToProfile() {
+            if (!adminDataAll[currentProfile]) adminDataAll[currentProfile] = { icons: [], rss: [] };
+            globalAdminIcons = adminDataAll[currentProfile].icons || [];
+            
+            // Aseguramos que el array de RSS exista en el perfil
+            if (!adminDataAll[currentProfile].rss) adminDataAll[currentProfile].rss = [];
+            globalAdminRss = adminDataAll[currentProfile].rss;
+            
+            // [NUEVO] Inyectamos el feed por defecto a todos los escritorios
+            const defaultFeed = "https://thanosweb.eu/webos/rss_manager.php?feed=rss";
+            if (!globalAdminRss.includes(defaultFeed)) {
+                globalAdminRss.push(defaultFeed);
+            }
+            
+            if (loginMode !== 'admin') {
+                if (!userDataAll[currentProfile]) userDataAll[currentProfile] = { icons: [], deleted: [] };
+                deletedItems = userDataAll[currentProfile].deleted || [];
+            }
+        }
+        
+        function populateProfileDropdowns() {
+            const $loginSel = $('#modal-login-profile'); 
+            $loginSel.empty();
+            Object.keys(adminDataAll).forEach(p => { $loginSel.append(`<option value="${p}">${p}</option>`); });
+            
+            $('#btn-profile').html(`<i class="bi bi-person-workspace me-1"></i>${currentProfile}`);
+            const $menu = $('#menu-profile');
+            $menu.empty();
+            Object.keys(adminDataAll).forEach(p => {
+                let activeClass = p === currentProfile ? 'active' : '';
+                $menu.append(`<li><a class="dropdown-item ${activeClass}" href="#" onclick="switchProfile('${p}')"><i class="bi bi-caret-right me-2"></i>${p}</a></li>`);
+            });
+            $menu.append('<li><hr class="dropdown-divider"></li>');
+            if (loginMode === 'admin') {
+                $menu.append(`<li><a class="dropdown-item text-warning" href="#" onclick="cloneProfile()"><i class="bi bi-copy me-2"></i>Duplicar Perfil Actual</a></li>`);
+                if (Object.keys(adminDataAll).length > 1) $menu.append(`<li><a class="dropdown-item text-danger" href="#" onclick="deleteProfile()"><i class="bi bi-trash me-2"></i>Borrar Perfil Actual</a></li>`);
+            } else {
+                $menu.append(`<li><a class="dropdown-item text-warning" href="#" onclick="resetProfile()"><i class="bi bi-arrow-counterclockwise me-2"></i>Restaurar a Plantilla Base</a></li>`);
+            }
+        }
+
+        async function switchProfile(name) {
+            if (name === currentProfile) return;
+            serializeAndSave(); 
+            currentProfile = name;
+            syncGlobalsToProfile();
+            if (loginMode === 'admin') renderMergedDesktop({ icons: globalAdminIcons, deleted: [] });
+            else renderMergedDesktop(userDataAll[currentProfile]);
+            
+            populateProfileDropdowns();
+            $('#toast-container').empty(); 
+            await loadRSSFeeds();
+            setStatus("Cambiado a plantilla: " + name);
+        }
+
+        function cloneProfile() {
+            let newName = prompt("Nombre para la nueva plantilla (ej. Profesores BBDD):");
+            if (!newName || adminDataAll[newName]) return alert("Nombre inválido o ya existente.");
+            serializeAndSave();
+            adminDataAll[newName] = JSON.parse(JSON.stringify(adminDataAll[currentProfile]));
+            switchProfile(newName);
+        }
+
+        function deleteProfile() {
+            if (confirm(`¿Borrar permanentemente la plantilla '${currentProfile}'? Afectará a todos los usuarios que usen esta plantilla.`)) {
+                delete adminDataAll[currentProfile];
+                
+                currentProfile = Object.keys(adminDataAll)[0];
+                
+                syncGlobalsToProfile();
+                
+                renderMergedDesktop({ icons: globalAdminIcons, deleted: [] });
+                
+                serializeAndSave(); 
+                
+                populateProfileDropdowns();
+                $('#toast-container').empty(); 
+                loadRSSFeeds();
+                setStatus("Plantilla borrada. Cambiado a: " + currentProfile);
+            }
+        }
+
+        function resetProfile() {
+            if (confirm("¿Restaurar escritorio a la plantilla original del administrador? Se borrarán tus iconos y notas personales de este perfil.")) {
+                userDataAll[currentProfile] = { icons: [], deleted: [] };
+                syncGlobalsToProfile(); 
+                renderMergedDesktop(userDataAll[currentProfile]);
+                serializeAndSave();
+                setStatus("Perfil restaurado a plantilla base.");
+            }
+        }
+
+        $(document).ready(async () => {
+            if (/Android.*Mobile|iPhone/i.test(navigator.userAgent)) {
+                $('#mobile-redirect-msg').fadeIn();
+                setTimeout(() => {
+                    window.location.href = 'index_mobile.html';
+                }, 4000);
+            }
+            setInterval(() => $('#clock').text(new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})), 1000);
+            await fetchAdminConfig();
+            populateProfileDropdowns();
+
+            $(window).on('resize', function() {
+                if ($('#desktop').is(':hidden')) return;
+                const maxW = window.innerWidth - 110; const maxH = window.innerHeight - 110;
+                $('.icon').each(function() {
+                    const p = $(this).position();
+                    if (p.left > maxW || p.top > maxH || p.left < 0 || p.top < 0) {
+                        $(this).css({ left: Math.max(10, Math.min(p.left, maxW)) + 'px', top: Math.max(10, Math.min(p.top, maxH)) + 'px' });
+                    }
+                });
+            });
+
+            try {
+                gapi.load('client', async () => { await gapi.client.init({ apiKey: API_KEY, discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"] }); });
+                if (typeof google !== 'undefined') {
+                    tokenClient = google.accounts.oauth2.initTokenClient({
+                        client_id: CLIENT_ID, scope: 'https://www.googleapis.com/auth/drive.file',
+                        callback: async (resp) => { 
+                            if(!resp.error) { loginMode = 'google'; showDesktop(); await fetchAdminConfig(); await fetchPublicItems(); setupDriveStorage(); } 
+                        }
+                    });
+                }
+            } catch (e) { console.warn("Google API no disponible."); }
+
+            $(document).on('mousedown', '.icon', function(e) { isDragging = false; if ($(this).attr('data-type') === 'note') { $(this).css('z-index', ++winZIndex); } });
+            $(document).on('mousemove', '.icon', function() { isDragging = true; });
+            $(document).on('mouseup', '.icon', function(e) {
+                if ($(e.target).hasClass('delete-btn')) return; if (isDragging || $(this).data('dragging')) return; 
+                const type = $(this).attr('data-type'); if (type === 'note') return;
+                const title = $(this).find('span').text(); const url = $(this).attr('data-url'); const mode = $(this).attr('data-mode'); 
+                if (type === 'folder' || $(this).hasClass('folder')) { openFolder(title, $(this)); } else if (url && url !== "undefined" && url !== "") { setStatus("Abriendo: " + title); if (mode === 'tab') window.open(url, '_blank'); else openAppWindow(title, url, 1200, 800); }
+            });
+
+            $(document).on('contextmenu', '.icon', function(e) {
+                if ($(this).attr('data-type') === 'note') return; if ($(this).attr('data-ispublic') === 'true' || $(this).attr('data-isapps') === 'true') return; 
+                e.preventDefault(); const $span = $(this).find('span'); const oldName = $span.text(); const newName = prompt("Renombrar:", oldName);
+                if (newName && newName !== oldName) { $span.text(newName); if (!deletedItems.includes(oldName)) deletedItems.push(oldName); serializeAndSave(); }
+            });
+
+            $(document).on('click', '.delete-btn', function(e) {
+                e.stopPropagation();
+                if ($(this).closest('.icon').attr('data-ispublic') === 'true' || $(this).closest('.icon').attr('data-isapps') === 'true') return alert("Esta carpeta del sistema es compartida y no puede ser eliminada.");
+                if(confirm("¿Eliminar elemento?")) { const name = $(this).siblings('span').text(); if (!deletedItems.includes(name)) deletedItems.push(name); $(this).closest('.icon').remove(); serializeAndSave(); }
+            });
+
+            $('#desktop').droppable({
+                accept: ".folder-item",
+                drop: function(e, ui) {
+                    const $dragged = ui.draggable; const $win = $dragged.closest('.window'); const winPos = $win.offset(); const winW = $win.outerWidth(); const winH = $win.outerHeight();
+                    if (e.pageX >= winPos.left && e.pageX <= winPos.left + winW && e.pageY >= winPos.top && e.pageY <= winPos.top + winH) return;
+                    const offset = $('#icon-container').offset(); const x = ui.helper.offset().left - offset.left; const y = ui.helper.offset().top - offset.top;
+                    const idx = $dragged.data('idx'); const $parentFolder = $win.data('parent-folder'); const isPub = $parentFolder.attr('data-ispublic') === 'true'; const isApps = $(this).attr('data-isapps') === 'true'; if (isApps) { setStatus("La carpeta de aplicaciones del sistema es de solo lectura.", true); return; } 
+                    let items = isPub ? publicItems : ($parentFolder.data('items') || []); const itemData = items[idx];
+                    if (itemData) {
+                        if (isPub && itemData.isAdmin && loginMode !== 'admin') return setStatus("No puedes extraer un elemento fijado por el administrador.", true);
+                        addIconToUI(itemData.name, x, y, itemData); items.splice(idx, 1); 
+                        if (isPub) savePublicItems(); else { $parentFolder.data('items', items); serializeAndSave(); }
+                        $dragged.remove(); $win.find('.folder-item').each(function(newIdx) { $(this).data('idx', newIdx); });
+                        if (items.length === 0) $win.find('.window-content').html('<p class="p-4 text-center text-muted">Carpeta vacía</p>'); setStatus("Elemento extraído al escritorio principal");
+                    }
+                }
+            });
+
+            $('#btn-guest').click(() => { pendingLoginMode = 'guest'; $('#modalProfileSelect').modal('show'); });
+            $('#btn-login').click(() => { pendingLoginMode = 'google'; $('#modalProfileSelect').modal('show'); });
+        });
+
+        async function promptAdmin() {
+            if (btoa(prompt("Contraseña:")) === KEY_OFS) { 
+                pendingLoginMode = 'admin'; 
+                $('#modalProfileSelect').modal('show'); 
+            } else { alert("Contraseña incorrecta"); }
+        }
+
+        async function confirmLoginProfile() {
+            $('#modalProfileSelect').modal('hide');
+            currentProfile = $('#modal-login-profile').val() || 'General';
+
+            if (pendingLoginMode === 'guest') {
+                loginMode = 'guest'; showDesktop(); 
+                await fetchAdminConfig(); await fetchPublicItems(); 
+                loadLocalConfig(); setStatus("Modo Invitado"); loadRSSFeeds(); 
+            } else if (pendingLoginMode === 'google') {
+                if (tokenClient) tokenClient.requestAccessToken();
+                else alert("Error al conectar con los servicios de Google. ¿Puedes estar usando un bloqueador de popups?.");
+            } else if (pendingLoginMode === 'admin') {
+                loginMode = 'admin'; $('#admin-indicator').show(); $('#btn-admin-rss').show(); $('#btn-admin-avisos').show(); 
+                showDesktop(); await fetchAdminConfig(); syncGlobalsToProfile(); populateProfileDropdowns();
+                await fetchPublicItems(); renderMergedDesktop({ icons: globalAdminIcons, deleted: [] }); 
+                setStatus("Modo Administrador"); loadRSSFeeds();
+            }
+        }
+
+        function showDesktop() { $('#login-screen').fadeOut(); $('#desktop').fadeIn(); }
+
+        async function fetchAdminConfig() {
+            try {
+                const res = await fetch('./uploads/admin_desktop.json?t=' + Date.now());
+                if (res.ok) {
+                    const data = JSON.parse(await res.text());
+                    if (data.profiles) { adminDataAll = data.profiles; } 
+                    else if (data.icons) { adminDataAll = { 'General': { icons: data.icons, rss: data.rss || [] } }; }
+                    syncGlobalsToProfile();
+                }
+            } catch(e) {}
+        }
+
+        async function fetchPublicItems() { try { const res = await fetch('api_public.php?action=get_json&t=' + Date.now()); if (res.ok) publicItems = await res.json(); } catch(e) { publicItems = []; } }
+
+        async function savePublicItems() { try { await fetch('api_public.php?action=save_json', { method: 'POST', body: JSON.stringify(publicItems) }); } catch(e) {} }
+
+        function isItemInUserConfig(name, userIcons) { return userIcons.some(ui => { if (ui.name === name) return true; if (ui.type === 'folder' && ui.items) return ui.items.some(sub => sub.name === name); return false; }); }
+
+        function renderMergedDesktop(userData) {
+            $('#icon-container').empty();
+            deletedItems = userData.deleted || [];
+            const userIcons = userData.icons || [];
+
+            if (loginMode !== 'admin') {
+                globalAdminIcons.forEach(adminIcon => {
+                    if (!deletedItems.includes(adminIcon.name) && !isItemInUserConfig(adminIcon.name, userIcons)) { addIconToUI(adminIcon.name, adminIcon.x, adminIcon.y, adminIcon); }
+                });
+
+                userIcons.forEach(userIcon => {
+                    const adminRef = globalAdminIcons.find(a => a.name === userIcon.name);
+                    if (adminRef && !deletedItems.includes(userIcon.name)) {
+                        userIcon.url = adminRef.url; userIcon.icon = adminRef.icon; userIcon.type = adminRef.type; userIcon.mode = adminRef.mode;
+                        if (adminRef.type === 'note') { userIcon.color = adminRef.color; userIcon.content = adminRef.content; }
+                    }
+                    if (userIcon.type === 'folder' && userIcon.items) {
+                        userIcon.items.forEach(subItem => {
+                            const subAdminRef = globalAdminIcons.find(a => a.name === subItem.name);
+                            if (subAdminRef) { subItem.url = subAdminRef.url; subItem.icon = subAdminRef.icon; subItem.type = subAdminRef.type; subItem.mode = subAdminRef.mode; }
+                        });
+                    }
+                    addIconToUI(userIcon.name, userIcon.x, userIcon.y, userIcon);
+                });
+            } else { userIcons.forEach(i => addIconToUI(i.name, i.x, i.y, i)); }
+
+            if ($('.icon[data-ispublic="true"]').length === 0) { addIconToUI("Public", 30, 30, { type: 'folder', icon: 'bi-folder-symlink', isPublic: true }); }
+            if ($('.icon[data-isapps="true"]').length === 0) { addIconToUI("Aplicaciones", 30, 140, { type: 'folder', icon: 'bi-grid-3x3-gap-fill text-success', isApps: true }); }
+        }
+
+        function preventOverlap($el) {
+            const buffer = 15; let overlaps = true; let currentX = parseInt($el.css('left')); let currentY = parseInt($el.css('top')); let w = $el.outerWidth(); let h = $el.outerHeight();
+            const maxW = Math.max(100, window.innerWidth - w - 20); const maxH = Math.max(100, window.innerHeight - h - 60);
+            let angle = 0; let radius = 0; let step = 15;
+            while (overlaps && radius < 800) {
+                overlaps = false; let rX = currentX; let rY = currentY;
+                if (radius > 0) { rX = Math.min(maxW, Math.max(10, currentX + radius * Math.cos(angle))); rY = Math.min(maxH, Math.max(10, currentY + radius * Math.sin(angle))); }
+                $('.icon').not($el).each(function() {
+                    const $other = $(this);
+                    if (rX < parseInt($other.css('left')) + $other.outerWidth() + buffer && rX + w + buffer > parseInt($other.css('left')) && rY < parseInt($other.css('top')) + $other.outerHeight() + buffer && rY + h + buffer > parseInt($other.css('top'))) { overlaps = true; return false; }
+                });
+                if (overlaps) { angle += 0.8; radius += step * 0.1; } else { currentX = rX; currentY = rY; }
+            }
+            $el.animate({left: currentX + 'px', top: currentY + 'px'}, 200);
+        }
+
+        function addIconToUI(name, x, y, data) {
+            let safeX = parseInt(x, 10); let safeY = parseInt(y, 10);
+            if (isNaN(safeX) || isNaN(safeY)) { safeX = Math.floor(Math.random() * 200) + 50; safeY = Math.floor(Math.random() * 200) + 50; }
+            const maxW = Math.max(100, window.innerWidth - 110); const maxH = Math.max(100, window.innerHeight - 110);
+            safeX = Math.max(10, Math.min(safeX, maxW)); safeY = Math.max(10, Math.min(safeY, maxH));
+            const isPublicAttr = data.isPublic ? 'data-ispublic="true"' : '';
+            const isAppsAttr = data.isApps ? 'data-isapps="true"' : '';
+            let $icon;
+            if (data.type === 'note') {
+                const color = data.color || 'yellow'; const encContent = encodeURIComponent(data.content || '');
+                $icon = $(`<div class="icon note note-${color}" style="position: absolute; top:${safeY}px; left:${safeX}px; z-index:40;" data-type="note" data-color="${color}" data-content="${encContent}"><div class="delete-btn">×</div><div class="note-content">${data.content || ''}</div><span style="display:none;">${name}</span></div>`);
+            } else {
+                const isFolder = data.type === 'folder'; const iconClass = isFolder ? (data.isPublic ? 'bi-folder-symlink text-info' : 'bi-folder-fill text-warning') : (data.icon || 'bi-globe'); const mode = data.mode || 'window';
+                $icon = $(`<div class="icon ${isFolder ? 'folder' : ''}" style="position: absolute; top:${safeY}px; left:${safeX}px;" data-url="${data.url || ''}" data-icon="${iconClass}" data-type="${data.type || 'link'}" data-mode="${mode}" ${isPublicAttr} ${isAppsAttr}><div class="delete-btn">−</div><i class="bi ${iconClass}"></i><span>${name}</span></div>`);
+            }
+
+            $icon.draggable({ 
+                containment: "#icon-container", distance: 5,
+                start: function() { $(this).data('dragging', true); $(this).css('z-index', ++winZIndex); },
+                stop: function() { setTimeout(() => $(this).data('dragging', false), 50); if (data.type === 'note') preventOverlap($(this)); serializeAndSave(); } 
+            });
+
+            if (data.type === 'folder') {
+                $icon.droppable({
+                    accept: ".icon:not(.folder):not(.note)", hoverClass: "bg-white bg-opacity-25",
+                    drop: function(e, ui) {
+                        const isPub = $(this).attr('data-ispublic') === 'true';
+                        let newItem = { name: ui.draggable.find('span').text(), url: ui.draggable.attr('data-url'), icon: ui.draggable.attr('data-icon'), type: ui.draggable.attr('data-type'), mode: ui.draggable.attr('data-mode') };
+                        if (isPub) { newItem.isAdmin = (loginMode === 'admin'); publicItems.push(newItem); savePublicItems(); setStatus("Elemento compartido en Public."); } 
+                        else { let items = $(this).data('items') || []; items.push(newItem); $(this).data('items', items); serializeAndSave(); }
+                        ui.draggable.remove();
+                    }
+                });
+                if(data.items && !data.isPublic) $icon.data('items', data.items);
+            }
+            $('#icon-container').append($icon);
+            if (data.type === 'note' && isNaN(parseInt(x, 10))) preventOverlap($icon);
+        }
+
+        function openAppWindow(title, url, w, h) {
+            winZIndex++; 
+            let finalUrl = url; 
+            let finalW = w ? parseInt(w) : 1200; 
+            let finalH = h ? parseInt(h) : 800;
+            let finalTop = 40;
+            let finalLeft = 60;
+            
+            finalW = Math.min(finalW, window.innerWidth - 40); 
+            finalH = Math.min(finalH, window.innerHeight - 80);
+            
+            // [NUEVO v3.6.30] Interceptor de redimensionamientos y coordenadas previas
+            const saved = localStorage.getItem('win_metrics_' + title);
+            if (saved) {
+                try {
+                    const m = JSON.parse(saved);
+                    if (m.l + m.w <= window.innerWidth && m.t + m.h <= window.innerHeight && m.t >= 0 && m.l >= 0) {
+                        finalW = m.w; finalH = m.h; finalTop = m.t; finalLeft = m.l;
+                    }
+                } catch(e) {}
+            }
+            
+            const officeExts = ['.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', '.odt', '.ods', '.odp'];
+            const isOffice = officeExts.some(ext => url.toLowerCase().endsWith(ext));
+            const isPdf = url.toLowerCase().endsWith('.pdf');
+            const isLocal = url.includes('uploads/') || url.includes('public/') || !url.startsWith('http');
+
+            if (url.includes('drive.google.com')) { 
+                finalUrl = url.replace(/\/view.*/, '/preview'); 
+            } else if (isPdf && isLocal) {
+                finalUrl = url;
+            } else if (isOffice || (isPdf && !isLocal)) { 
+                let absoluteUrl = url.startsWith('http') ? url : new URL(url, window.location.href).href;
+                finalUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(absoluteUrl)}&embedded=true`; 
+            }
+
+            const winId = 'win_' + Date.now();
+            const $win = $(`<div id="${winId}" class="window" style="width:${finalW}px; height:${finalH}px; top:${finalTop}px; left:${finalLeft}px; z-index:${winZIndex}"><div class="window-header"><span>${title}</span><div><button class="btn btn-sm btn-light py-0 me-1" onclick="window.open('${url}', '_blank')">↗</button><button class="btn-close btn-sm" onclick="$('#${winId}').remove()"></button></div></div><div class="window-content"><iframe src="${finalUrl}"></iframe></div></div>`);
+            
+            $('#desktop').append($win); 
+            $win.draggable({ handle: ".window-header", containment: "#desktop", stop: function() { saveWindowMetrics(title, $win); } })
+                .resizable({ stop: function() { saveWindowMetrics(title, $win); } })
+                .mousedown(function(){ $(this).css('z-index', ++winZIndex); });
+        }
+
+        function openFolder(title, $folder) {
+            const isPub = $folder.attr('data-ispublic') === 'true';
+            const isApps = $folder.attr('data-isapps') === 'true';
+
+            const renderContent = (items) => {
+                let html = '<div class="d-flex flex-wrap justify-content-start align-content-start p-3 gap-2" style="min-height: 100%;">';
+                items.forEach((i, idx) => {
+                    const modeArg = i.mode || 'window'; const clickAction = modeArg === 'tab' ? `window.open('${i.url}', '_blank')` : `openAppWindow('${i.name}', '${i.url}', 1200, 800)`;
+                    let canDelete = true; 
+                    if (isPub && i.isAdmin && loginMode !== 'admin') canDelete = false;
+                    if (isApps) canDelete = false; 
+                    
+                    let delBtn = canDelete ? `<div class="delete-folder-item" data-idx="${idx}">×</div>` : '';
+                    let shareBtn = isPub ? `<div class="share-folder-item" data-idx="${idx}" title="Compartir enlace"><i class="bi bi-share-fill" style="font-size:9px; position:relative; top:-4px;"></i></div>` : '';
+
+                    html += `<div class="folder-item text-center p-2" style="width:85px; cursor:pointer;" data-idx="${idx}">${delBtn}${shareBtn}<div onclick="${clickAction}"><i class="bi ${i.icon || 'bi-file-earmark'} d-block fs-2 mb-1"></i><small class="text-dark d-block" style="line-height:1.2; word-wrap:break-word;">${i.name}</small></div></div>`;
+                });
+                html += '</div>';
+                
+                winZIndex++; const winId = 'folder_' + Date.now();
+                let folderW = Math.min(600, window.innerWidth - 40); 
+                let folderH = Math.min(450, window.innerHeight - 80);
+                let folderTop = 80;
+                let folderLeft = 120;
+                let extraHeader = isPub ? `<button class="btn btn-sm btn-outline-primary py-0 me-2" onclick="document.getElementById('public-file-input').click()"><i class="bi bi-cloud-upload"></i> Subir a Public</button>` : '';
+
+                // [NUEVO v3.6.30] Persistencia dimensional adaptada a contenedores de directorios
+                const saved = localStorage.getItem('win_metrics_folder_' + title);
+                if (saved) {
+                    try {
+                        const m = JSON.parse(saved);
+                        if (m.l + m.w <= window.innerWidth && m.t + m.h <= window.innerHeight && m.t >= 0 && m.l >= 0) {
+                            folderW = m.w; folderH = m.h; folderTop = m.t; folderLeft = m.l;
+                        }
+                    } catch(e) {}
+                }
+
+                const $win = $(`<div id="${winId}" class="window" style="width:${folderW}px; height:${folderH}px; top:${folderTop}px; left:${folderLeft}px; z-index:${winZIndex}"><div class="window-header"><span>📁 ${title}</span><div>${extraHeader}<button class="btn-close btn-sm" onclick="$('#${winId}').remove()"></button></div></div><div class="window-content">${items.length ? html : '<p class="p-4 text-center text-muted">Carpeta vacía</p>'}</div></div>`);
+                $win.data('parent-folder', $folder); $('#desktop').append($win);
+                
+                $win.draggable({ handle: ".window-header", containment: "#desktop", stop: function() { saveWindowMetrics('folder_' + title, $win); } })
+                    .resizable({ minWidth: 250, minHeight: 200, containment: "#desktop", stop: function() { saveWindowMetrics('folder_' + title, $win); } })
+                    .mousedown(function(){ $(this).css('z-index', ++winZIndex); });
+
+                if (!isApps) {
+                    $win.find('.window-content').droppable({
+                        accept: ".icon:not(.folder):not(.note)",
+                        hoverClass: "bg-light", 
+                        drop: function(e, ui) {
+                            let newItem = { name: ui.draggable.find('span').text(), url: ui.draggable.attr('data-url'), icon: ui.draggable.attr('data-icon'), type: ui.draggable.attr('data-type'), mode: ui.draggable.attr('data-mode') };
+                            ui.draggable.remove(); 
+                            if (isPub) { newItem.isAdmin = (loginMode === 'admin'); publicItems.push(newItem); savePublicItems(); setStatus("Elemento compartido en Public."); } 
+                            else { let folderItems = $folder.data('items') || []; folderItems.push(newItem); $folder.data('items', folderItems); serializeAndSave(); }
+                            $win.remove(); openFolder(title, $folder);
+                        }
+                    });
+                }
+                
+                $win.find('.share-folder-item').click(function(e) {
+                    e.stopPropagation();
+                    const idx = $(this).data('idx');
+                    const itm = items[idx];
+                    
+                    if (itm && itm.url) {
+                        const filename = itm.url.split('/').pop();
+                        const fullShareUrl = 'https://thanosweb.eu/webos/public/' + filename;
+                        
+                        setStatus("Generando enlace TinyURL...");
+                        
+                        fetch(`api_public.php?action=shorten&url=${encodeURIComponent(fullShareUrl)}`)
+                            .then(res => res.json())
+                            .then(resData => {
+                                if (resData && resData.status === 'success') {
+                                    navigator.clipboard.writeText(resData.short);
+                                    alert("¡Enlace acortado copiado al portapapeles con éxito!\n\n" + resData.short);
+                                    setStatus("Enlace compartido copiado.");
+                                } else {
+                                    throw new Error(); 
+                                }
+                            })
+                            .catch(() => {
+                                navigator.clipboard.writeText(fullShareUrl);
+                                alert("Copiado enlace directo completo (Visor de TinyURL no disponible):\n\n" + fullShareUrl);
+                                setStatus("Enlace directo copiado.");
+                            });
+                    }
+                });
+
+                $win.find('.delete-folder-item').click(function(e) {
+                    e.stopPropagation();
+                    if (confirm("¿Borrar permanentemente este elemento?")) {
+                        const idx = $(this).data('idx');
+                        if (isPub) { publicItems.splice(idx, 1); savePublicItems(); } else { items.splice(idx, 1); $folder.data('items', items); serializeAndSave(); }
+                        $win.remove(); openFolder(title, $folder);
+                    }
+                });
+
+                let isItemDragging = false;
+                $win.find('.folder-item').on('mousedown', function() { isItemDragging = false; }).on('mousemove', function() { isItemDragging = true; });
+                
+                if (!isApps) {
+                    $win.find('.folder-item').draggable({
+                        appendTo: "#desktop", helper: "clone", zIndex: 99999,
+                        start: function(e, ui) { 
+                            const idx = $(this).data('idx'); const itm = isPub ? publicItems[idx] : items[idx];
+                            if (isPub && itm.isAdmin && loginMode !== 'admin') { setStatus("Acceso denegado: Archivo fijado por Administrador", true); e.preventDefault(); return false; }
+                            $(this).data('dragging', true); ui.helper.css({'opacity':'0.8', 'width':'85px'}); 
+                        },
+                        stop: function() { setTimeout(() => $(this).data('dragging', false), 50); }
+                    });
+                }
+            };
+
+            if (isApps) {
+                setStatus("Cargando aplicaciones ...");
+                fetch('api_apps.php?t=' + Date.now())
+                    .then(res => res.json())
+                    .then(apps => {
+                        let dynamicItems = apps.map(file => {
+                            return {
+                                name: file.replace(/\.(html|php)$/i, ''), 
+                                url: 'Aplicaciones/' + file,              
+                                icon: 'bi-window-stack text-success',    
+                                type: 'link',
+                                mode: 'window'
+                            };
+                        });
+                        renderContent(dynamicItems);
+                    })
+                    .catch(() => setStatus("Error al sincronizar aplicaciones locales", true));
+            } else {
+                const items = isPub ? publicItems : ($folder.data('items') || []);
+                renderContent(items);
+            }
+        }
+        
+        function checkAndUpload() { if (loginMode === 'guest') { alert("El modo invitado solo permite subir a la carpeta Public."); return; } $('#file-input').click(); }
+
+        async function handleUpload(input) {
+            const file = input.files[0]; if (!file) return;
+            if (loginMode === 'admin') {
+                const formData = new FormData(); formData.append('file', file);
+                try { const resp = await fetch('upload_admin.php', { method: 'POST', body: formData }); const res = await resp.json(); if(res.status === 'success') { addIconToUI(res.name, null, null, { url: res.url, icon: 'bi-hdd-network', type: 'file', mode: 'window' }); serializeAndSave(); } } catch(e) {}
+            } else if (loginMode === 'google') {
+                try { const metadata = { name: file.name, parents: [folderId] }; const formData = new FormData(); formData.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' })); formData.append('file', file); const resp = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,webViewLink', { method: 'POST', headers: new Headers({ 'Authorization': 'Bearer ' + gapi.client.getToken().access_token }), body: formData }); const driveFile = await resp.json(); addIconToUI(driveFile.name, null, null, { url: driveFile.webViewLink, icon: 'bi-google', type: 'file', mode: 'window' }); serializeAndSave(); } catch(e) {}
+            }
+        }
+
+        async function handlePublicUpload(input) {
+            const file = input.files[0]; if (!file) return;
+            if (file.size > 31457280) { alert("Límite de 30MB superado."); return; }
+            const ext = file.name.split('.').pop().toLowerCase(); if (['iso', 'exe', 'cmd', 'sh', 'bat'].includes(ext)) { alert("Extensión no permitida."); return; }
+            setStatus("Subiendo archivo a Public..."); const formData = new FormData(); formData.append('file', file);
+            try { const resp = await fetch('api_public.php?action=upload', { method: 'POST', body: formData }); const res = await resp.json(); if(res.status === 'success') { publicItems.push({ name: res.name, url: res.url, icon: 'bi-hdd-network', type: 'file', mode: 'window', isAdmin: (loginMode === 'admin') }); await savePublicItems(); setStatus("Archivo público guardado."); $('.window:has(.window-header:contains("Public"))').remove(); openFolder("Public", $('.icon[data-ispublic="true"]')); } else { alert(res.msg); } } catch(e) { setStatus("Error al subir a Public", true); } input.value = "";
+        }
+
+        function serializeAndSave() {
+            let icons = [];
+            $('.icon').each(function() {
+                let cssLeft = parseInt($(this).css('left'), 10); let cssTop = parseInt($(this).css('top'), 10);
+                icons.push({ 
+                    name: $(this).find('span').text(), x: isNaN(cssLeft) ? 50 : cssLeft, y: isNaN(cssTop) ? 50 : cssTop, 
+                    url: $(this).attr('data-url'), icon: $(this).attr('data-icon'), type: $(this).attr('data-type'), mode: $(this).attr('data-mode'),
+                    color: $(this).attr('data-color'), content: decodeURIComponent($(this).attr('data-content') || ''),
+                    isPublic: $(this).attr('data-ispublic') === 'true', isApps: $(this).attr('data-isapps') === 'true', items: $(this).attr('data-ispublic') === 'true' ? [] : ($(this).data('items') || []) 
+                });
+            });
+            if (loginMode === 'admin') { adminDataAll[currentProfile] = { icons: icons, rss: globalAdminRss }; const json = JSON.stringify({ profiles: adminDataAll }); $.post('save_admin.php', { json_data: json }); } 
+            else { userDataAll[currentProfile] = { icons: icons, deleted: deletedItems }; const json = JSON.stringify({ profiles: userDataAll }); if (loginMode === 'google') syncDrive(json); else localStorage.setItem('webos_local_v11', json); }
+        }
+
+        function loadLocalConfig() { 
+            let raw = localStorage.getItem('webos_local_v11'); let data = raw ? JSON.parse(raw) : {}; 
+            if (data.profiles) userDataAll = data.profiles; else if (data.icons) userDataAll = { 'General': { icons: data.icons, deleted: data.deleted || [] } }; else userDataAll = { 'General': { icons: [], deleted: [] } };
+            syncGlobalsToProfile(); renderMergedDesktop(userDataAll[currentProfile]); populateProfileDropdowns();
+        }
+
+        async function setupDriveStorage() {
+            setStatus("Sincronizando con Drive...");
+            try {
+                let res = await gapi.client.drive.files.list({ q: "name='ThanosWebOS' and trashed=false", fields: "files(id)" });
+                if (res.result.files.length > 0) folderId = res.result.files[0].id; else { let f = await gapi.client.drive.files.create({ resource: {name:'ThanosWebOS', mimeType:'application/vnd.google-apps.folder'}, fields: 'id' }); folderId = f.result.id; }
+                let cRes = await gapi.client.drive.files.list({ q: `name='desktop_config.json' and '${folderId}' in parents`, fields: "files(id)" });
+                if (cRes.result.files.length > 0) { configId = cRes.result.files[0].id; let fileContent = await gapi.client.drive.files.get({ fileId: configId, alt: 'media' }); let data = (typeof fileContent.result === 'string') ? JSON.parse(fileContent.result) : fileContent.result; if (data.profiles) userDataAll = data.profiles; else if (data.icons) userDataAll = { 'General': { icons: data.icons, deleted: data.deleted || [] } }; else userDataAll = { 'General': { icons: [], deleted: [] } }; } else { userDataAll = { 'General': { icons: [], deleted: [] } }; }
+                syncGlobalsToProfile(); renderMergedDesktop(userDataAll[currentProfile]); setStatus("Escritorio cargado desde Drive"); populateProfileDropdowns(); loadRSSFeeds();
+            } catch(e) { setStatus("Error Drive", true); }
+        }
+
+        async function syncDrive(json) { if(!folderId) return; const meta = { name: 'desktop_config.json', mimeType: 'application/json' }; if(!configId) { let f = await gapi.client.drive.files.create({ resource: {...meta, parents:[folderId]} }); configId = f.result.id; } await fetch('https://www.googleapis.com/upload/drive/v3/files/' + configId + '?uploadType=media', { method: 'PATCH', headers: new Headers({ 'Authorization': 'Bearer ' + gapi.client.getToken().access_token, 'Content-Type': 'application/json' }), body: json }); }
+
+        function createNewFolder() { addIconToUI("Nueva Carpeta", null, null, { type: 'folder' }); serializeAndSave(); }
+        function openShortcutModal() { $('#modalShortcut').modal('show'); }
+        function addShortcutFromUI() { addIconToUI($('#sc-name').val(), null, null, { url: $('#sc-url').val(), type: $('#sc-type').val(), icon: $('#sc-icon').val(), mode: $('#sc-mode').val() }); serializeAndSave(); $('#modalShortcut').modal('hide'); }
+        function openNoteModal() { $('#note-content').val(''); $('#note-color').val('yellow'); $('#modalNote').modal('show'); }
+        function addNoteFromUI() { const id = 'Nota_' + Date.now(); addIconToUI(id, null, null, { type: 'note', color: $('#note-color').val(), content: $('#note-content').val() }); serializeAndSave(); $('#modalNote').modal('hide'); setStatus("Nota creada."); }
+
+        async function loadRSSFeeds() {
+            if (!globalAdminRss || !Array.isArray(globalAdminRss) || globalAdminRss.length === 0) return;
+            const now = new Date().getTime();
+            await Promise.all(globalAdminRss.map(async (url, i) => {
+                try {
+                    const resp = await fetch(`api_rss.php?url=${encodeURIComponent(url)}`); const data = await resp.json();
+                    if (data && data.status === 'ok' && Array.isArray(data.items) && data.items.length > 0) {
+                        rssCache[i] = data; data.items.sort((a, b) => { return (new Date((b.pubDate || '').replace(/-/g, '/')).getTime() || 0) - (new Date((a.pubDate || '').replace(/-/g, '/')).getTime() || 0); });
+                        const firstItem = data.items[0]; let pDate = new Date((firstItem.pubDate || "").replace(/-/g, '/')).getTime(); if (isNaN(pDate)) pDate = new Date(firstItem.pubDate).getTime();
+                        
+                        const lastDismissed = localStorage.getItem('rss_dismissed_' + i);
+                        if (lastDismissed !== firstItem.title && (isNaN(pDate) || (now - pDate < 1209600000))) {
+                            showRSSToast((data.feed && data.feed.title) ? data.feed.title : 'Aviso', firstItem.title || 'Nueva actualización', i);
+                        }
+                    }
+                } catch(e) {}
+            }));
+        }
+
+        function markRSSAsRead(feedIdx, itemTitle) {
+            localStorage.setItem('rss_dismissed_' + feedIdx, decodeURIComponent(itemTitle));
+        }
+        
+        function saveWindowMetrics(key, $win) {
+            const metrics = {
+                w: $win.outerWidth(),
+                h: $win.outerHeight(),
+                t: parseInt($win.css('top'), 10),
+                l: parseInt($win.css('left'), 10)
+            };
+            localStorage.setItem('win_metrics_' + key, JSON.stringify(metrics));
+        }
+
+        function showRSSToast(fT, iT, fI) { 
+            const tId = 'rss-toast-' + fI; 
+            if ($('#'+tId).length > 0) $('#'+tId).remove(); 
+            
+            let linkHtml = iT;
+            let dateBadge = '';
+            let descHtml = ''; 
+            let toggleBtn = ''; 
+            
+            const item = (rssCache[fI] && rssCache[fI].items) ? rssCache[fI].items[0] : null;
+            
+            if (item) {
+                if (item.link) {
+                    linkHtml = `<a href="${item.link}" target="_blank" class="text-dark text-decoration-none hover-primary" title="Abrir noticia">${iT} <i class="bi bi-box-arrow-up-right ms-1 text-muted" style="font-size:0.75rem;"></i></a>`;
+                }
+                if (item.pubDate) {
+                    let dO = new Date((item.pubDate || "").replace(/-/g, '/')); 
+                    if (isNaN(dO.getTime())) dO = new Date(item.pubDate);
+                    if (!isNaN(dO.getTime())) {
+                        dateBadge = `<span class="badge rounded-pill text-dark float-end ms-2 mt-1" style="background-color: #d4edda; font-size: 0.65rem; font-weight: 600;">${dO.toLocaleDateString()}</span>`;
+                    }
+                }
+                
+                const content = item.description || item.content || '';
+                if (content.trim() !== '') {
+                    toggleBtn = `<a href="#" class="text-secondary ms-2 text-decoration-none" data-bs-toggle="collapse" data-bs-target="#rss-desc-${fI}" title="Leer cuerpo de la noticia"><i class="bi bi-chevron-down"></i></a>`;
+                    descHtml = `<div class="collapse mt-2 mb-2" id="rss-desc-${fI}"><div class="small text-muted p-2 bg-light rounded border" style="max-height: 140px; overflow-y: auto; font-size: 0.75rem;">${content}</div></div>`;
+                }
+            }
+
+            $('#toast-container').append(`
+                <div id="${tId}" class="toast bg-white shadow border-0" style="margin-bottom:12px;" role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="false">
+                    <div class="toast-header bg-primary text-white border-0">
+                        <i class="bi bi-rss-fill me-2"></i>
+                        <strong class="me-auto text-truncate" style="max-width:200px;">${fT}</strong>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" onclick="markRSSAsRead(${fI}, '${encodeURIComponent(iT)}')"></button>
+                    </div>
+                    <div class="toast-body">
+                        ${dateBadge}
+                        <p class="mb-1 text-dark small fw-bold d-flex align-items-start justify-content-between">
+                            <span>${linkHtml}</span>
+                            ${toggleBtn}
+                        </p>
+                        ${descHtml}
+                        <a href="#" class="text-decoration-none small text-primary d-inline-block mt-1" onclick="showRSSOffcanvas(${fI}); return false;"><i class="bi bi-list-ul"></i> Ver anteriores</a>
+                    </div>
+                </div>
+            `); 
+            
+            const tEl = document.getElementById(tId); 
+            if (tEl) new bootstrap.Toast(tEl).show(); 
+        }
+
+        function showRSSOffcanvas(fI) { const d = rssCache[fI]; if (!d || !Array.isArray(d.items)) return; let html = `<h6 class="text-primary border-bottom pb-2 mb-3">${(d.feed && d.feed.title) ? d.feed.title : 'Historial'}</h6>`; d.items.slice(0, 8).forEach(item => { let dO = new Date((item.pubDate || "").replace(/-/g, '/')); if (isNaN(dO.getTime())) dO = new Date(item.pubDate); html += `<div class="mb-3 bg-light p-2 rounded border"><a href="${item.link || '#'}" target="_blank" class="text-decoration-none fw-bold text-dark d-block" style="font-size:13px; line-height:1.3;">${item.title || 'Enlace'}</a><div class="text-muted mt-1" style="font-size:11px;"><i class="bi bi-clock"></i> ${isNaN(dO.getTime()) ? 'Fecha desconocida' : dO.toLocaleDateString()}</div></div>`; }); $('#rss-history-body').html(html); const off = document.getElementById('rssOffcanvas'); if (off) new bootstrap.Offcanvas(off).show(); }
+        function openAdminRSS() { renderRSSList(); $('#modalAdminRSS').modal('show'); }
+        function renderRSSList() { const $ul = $('#rss-list'); $ul.empty(); if (globalAdminRss.length===0) { $ul.append('<li class="list-group-item text-muted small">Vacio</li>'); return; } globalAdminRss.forEach((url, idx) => { $ul.append(`<li class="list-group-item d-flex justify-content-between align-items-center small"><span class="text-truncate" style="max-width:90%;">${url}</span><button class="btn btn-sm btn-outline-danger py-0 px-1" onclick="removeRSSChannel(${idx})"><i class="bi bi-trash"></i></button></li>`); }); }
+        function addRSSChannel() { const url = $('#new-rss-url').val().trim(); if(url){globalAdminRss.push(url); $('#new-rss-url').val(''); renderRSSList(); serializeAndSave(); setStatus("RSS guardado");} }
+        function removeRSSChannel(idx) { globalAdminRss.splice(idx, 1); renderRSSList(); serializeAndSave(); }
+        
+        // WIDGETS
+        let activeWidgets = new Set();
+
+        async function openWidgetsModal() {
+            const $container = $('#widgets-list');
+            $container.html('<div class="col-12 text-center text-muted py-3"><div class="spinner-border spinner-border-sm me-2"></div>Cargando widgets...</div>');
+            $('#modalWidgets').modal('show');
+
+            try {
+                const res = await fetch('api_widgets.php?t=' + Date.now());
+                const widgets = await res.json();
+                $container.empty();
+
+                if (!widgets.length) {
+                    $container.html('<p class="col-12 text-center text-muted my-3">No hay widgets en la carpeta /widgets.</p>');
+                    return;
+                }
+
+                widgets.forEach(w => {
+                    const isAdded = activeWidgets.has(w.id);
+                    const btnClass = isAdded ? 'btn-secondary disabled' : 'btn-primary';
+                    const btnText = isAdded ? 'En escritorio' : 'Añadir';
+                    const imgHtml = w.preview 
+                        ? `<img src="${w.preview}" class="img-fluid rounded border mb-2" style="height:70px; object-fit:cover; width:100%;">` 
+                        : `<div class="bg-light border rounded mb-2 d-flex align-items-center justify-content-center" style="height:70px;"><i class="bi bi-window fs-2 text-muted"></i></div>`;
+
+                    $container.append(`
+                        <div class="col-6 col-md-4 text-center">
+                            <div class="card h-100 p-2 shadow-sm border-0 bg-light">
+                                ${imgHtml}
+                                <small class="fw-bold text-truncate d-block mb-2" title="${w.name}">${w.name}</small>
+                                <button class="btn btn-sm ${btnClass} w-100" id="btn-w-${w.id}" onclick="addWidgetToast('${w.id}', '${w.name}', '${w.file}')">${btnText}</button>
+                            </div>
+                        </div>
+                    `);
+                });
+            } catch (e) {
+                $container.html('<p class="col-12 text-center text-danger my-3">Error al consultar los widgets disponibles.</p>');
+            }
+        }
+
+        function addWidgetToast(id, name, file) {
+            if (activeWidgets.has(id)) return;
+            activeWidgets.add(id);
+
+            const tId = 'widget-toast-' + id;
+            $('#toast-container').append(`
+                <div id="${tId}" class="toast shadow-lg" role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="false" style="width: 320px; margin-bottom: 12px; background: #000; border: 1px solid #000;">
+                    <div class="toast-header text-white border-0 py-1" style="background: #111;">
+                        <i class="bi bi-puzzle me-2 text-warning"></i>
+                        <strong class="me-auto small text-truncate" style="max-width: 220px;">${name}</strong>
+                        <button type="button" class="btn-close btn-close-white btn-sm" data-bs-dismiss="toast" onclick="removeWidgetToast('${id}')"></button>
+                    </div>
+                    <div class="toast-body p-1" style="height: 440px; overflow: hidden; background: #000;">
+                        <iframe src="widgets/${file}" style="width: 100%; height: 100%; border: none; display: block;"></iframe>
+                    </div>
+                </div>
+            `);
+
+            const tEl = document.getElementById(tId);
+            if (tEl) new bootstrap.Toast(tEl).show();
+
+            $(`#btn-w-${id}`).removeClass('btn-primary').addClass('btn-secondary disabled').text('En escritorio');
+            $('#modalWidgets').modal('hide');
+            setStatus("Widget acoplado: " + name);
+        }
+
+        function removeWidgetToast(id) {
+            activeWidgets.delete(id);
+            $(`#widget-toast-${id}`).remove();
+            $(`#btn-w-${id}`).removeClass('btn-secondary disabled').addClass('btn-primary').text('Añadir');
+            setStatus("Widget cerrado");
+        }
+        function toggleFullScreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(() => {
+                    setStatus("Pantalla completa no permitida por el navegador", true);
+                });
+            } else {
+                if (document.exitFullscreen) document.exitFullscreen();
+            }
+        }
+
+        document.addEventListener('fullscreenchange', () => {
+            const isFull = !!document.fullscreenElement;
+            $('#btn-fullscreen').toggleClass('bi-arrows-fullscreen', !isFull).toggleClass('bi-fullscreen-exit', isFull);
+        });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

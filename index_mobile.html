@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Escritorio Docente Móvil - v3.7.1</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="https://apis.google.com/js/api.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui-touch-punch/0.2.3/jquery.ui.touch-punch.min.js"></script>
+
+    <style>
+        :root { --bg-current: url('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1920&q=80'); }
+        body, html { height: 100%; width: 100%; margin: 0; overflow: hidden; position: fixed; overscroll-behavior: none; font-family: 'Segoe UI', sans-serif; background: #1a252f; touch-action: none; }
+        
+        #login-screen { height: 100dvh; display: flex; justify-content: center; align-items: center; color: white; flex-direction: column; z-index: 1000; position: relative; background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d); }
+        
+        #desktop { 
+            width: 133.333vw; 
+            height: 133.333dvh; 
+            background: var(--bg-current) no-repeat center center scroll; 
+            background-size: cover; 
+            display: none; 
+            position: absolute; 
+            top: 0; left: 0;
+            zoom: 0.75; 
+            -moz-transform: scale(0.75); 
+            -moz-transform-origin: top left;
+            overflow: hidden;
+            overscroll-behavior: none;
+        }
+
+        #icon-container { position: absolute; top: 0; left: 0; right: 0; bottom: 50px; overflow: hidden; }
+
+        .icon { width: 100px; text-align: center; color: white; text-shadow: 0px 2px 4px rgba(0,0,0,0.8); cursor: pointer; padding: 10px 5px; border-radius: 12px; z-index: 10; transition: background 0.2s; user-select: none; }
+        .icon:hover { background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(5px); }
+        .icon i { font-size: 45px; display: block; margin-bottom: 5px; pointer-events: none; }
+        .icon span { font-size: 13px; font-weight: 500; display: block; word-wrap: break-word; line-height: 1.2; pointer-events: none; }
+        
+        .delete-btn { position: absolute; top: -5px; right: -5px; background: #ff4444; color: white; border-radius: 50%; width: 22px; height: 22px; line-height: 18px; text-align: center; display: none; border: 2px solid white; z-index: 20; }
+        .icon:hover .delete-btn { display: block; }
+
+        .icon.note { display: none !important; }
+
+        .window { background: white; border-radius: 0; position: absolute; box-shadow: 0 20px 50px rgba(0,0,0,0.5); display: flex; flex-direction: column; overflow: hidden; width: 100% !important; height: calc(100% - 50px) !important; top: 0 !important; left: 0 !important; }
+        .window-header { background: #f8f9fa; padding: 8px 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; font-weight: 600; font-size: 14px; }
+        .window-content { flex-grow: 1; height: 100%; background: white; position: relative; overflow-y: auto; overflow-x: hidden; }
+        iframe { width: 100%; height: 100%; border: none; display: block; }
+
+        .folder-item { transition: background 0.2s; border-radius: 8px; user-select: none; position: relative; }
+        .folder-item:hover { background: rgba(0,0,0,0.08); }
+        .delete-folder-item { position:absolute; top:-2px; right:5px; background:#ff4444; color:white; border-radius:50%; width:18px; height:18px; font-size:14px; line-height:16px; cursor:pointer; display:none; }
+        .folder-item:hover .delete-folder-item { display:block; }
+
+        .taskbar { background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); height: 50px; border-top: 1px solid rgba(255,255,255,0.1); position: absolute; bottom: 0; left: 0; width: 100%; z-index: 5000; display: flex; align-items: center; padding: 0 15px; }
+        #status-bar { font-family: 'Consolas', monospace; font-size: 12px; color: #00ffcc; margin-left: 20px; white-space: nowrap; overflow: hidden; max-width: 500px; }
+        .admin-badge { position: fixed; top: 10px; right: 10px; background: #dc3545; color: white; padding: 5px 15px; border-radius: 20px; font-weight: bold; font-size: 12px; z-index: 2000; display: none; opacity: 0.4; pointer-events: none; }
+        
+        .share-folder-item { position:absolute; top:-2px; left:5px; background:#0d6efd; color:white; border-radius:50%; width:18px; height:18px; font-size:14px; line-height:16px; text-align:center; cursor:pointer; display:none; z-index: 30; }
+        .folder-item:hover .share-folder-item { display:block; }
+        
+        .toast-container { max-width: 90vw; }
+    </style>
+</head>
+<body>
+
+    <div class="toast-container position-fixed top-0 end-0 p-3 mt-4" id="toast-container" style="z-index: 6000;"></div>
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="rssOffcanvas" style="z-index: 6000;">
+        <div class="offcanvas-header bg-light border-bottom py-2">
+            <h6 class="offcanvas-title fw-bold"><i class="bi bi-rss-fill text-warning me-1"></i> Noticias Anteriores</h6>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+        </div>
+        <div class="offcanvas-body" id="rss-history-body"></div>
+    </div>
+
+    <div id="admin-indicator" class="admin-badge">MODO ADMINISTRADOR</div>
+
+    <div id="login-screen">
+        <h1 class="display-4 fw-bold mb-4 text-center">Escritorio Móvil</h1>
+        <div class="d-grid gap-3 col-10 col-md-8 mx-auto">
+            <button id="btn-login" class="btn btn-primary rounded-pill shadow mt-2">Iniciar con Google Drive</button>
+            <button id="btn-guest" class="btn btn-outline-light rounded-pill">Entrar como Invitado (Local)</button>
+            <button onclick="promptAdmin()" class="btn btn-link btn-sm text-white-50 mt-2 text-decoration-none">Acceso administrador</button>
+        </div>          
+    </div>
+
+    <div id="desktop">
+        <div id="icon-container"></div>
+        <nav class="taskbar">
+            <div class="d-flex gap-2 align-items-center flex-grow-1">
+                <div class="dropdown me-1">
+                    <button class="btn btn-sm btn-secondary dropdown-toggle" data-bs-toggle="dropdown" id="btn-profile"><i class="bi bi-person-workspace me-1"></i>General</button>
+                    <ul class="dropdown-menu dropdown-menu-dark text-small shadow" id="menu-profile"></ul>
+                </div>
+
+                <button class="btn btn-sm btn-outline-light" onclick="openShortcutModal()">+ Enlace</button>
+                <button class="btn btn-sm btn-outline-warning" onclick="createNewFolder()">+ Carpeta</button>
+                <button class="btn btn-sm btn-outline-info" onclick="checkAndUpload()">📁 Subir</button>
+                
+                <input type="file" id="file-input" style="display:none" onchange="handleUpload(this)">
+                <input type="file" id="public-file-input" style="display:none" onchange="handlePublicUpload(this)">
+                
+                <div id="status-bar">> Modo móvil listo.</div>
+            </div>
+            <div class="text-white-50 small d-flex align-items-center">
+                <span id="clock" class="me-3">00:00</span>
+                <button class="btn btn-sm btn-danger py-0" onclick="location.reload()">Salir</button>
+            </div>
+        </nav>
+    </div>
+
+    <div class="modal fade" id="modalProfileSelect" tabindex="-1" data-bs-backdrop="static"><div class="modal-dialog modal-sm modal-dialog-centered"><div class="modal-content text-dark"><div class="modal-header py-2 bg-light"><h6 class="modal-title fw-bold"><i class="bi bi-person-workspace me-1"></i> Seleccionar Perfil</h6><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body text-center"><select id="modal-login-profile" class="form-select form-select-sm mb-3 text-center fw-bold"></select><button class="btn btn-primary w-100 rounded-pill shadow-sm" onclick="confirmLoginProfile()">Continuar</button></div></div></div></div>
+    
+    <div class="modal fade" id="modalShortcut" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header py-2"><h6>Nuevo Acceso</h6><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><input type="text" id="sc-name" class="form-control mb-2" placeholder="Nombre del acceso directo"><input type="text" id="sc-url" class="form-control mb-2" placeholder="URL (https://...)"><div class="row g-2 mb-3"><div class="col-6"><label class="form-label small mb-0">Tipo de Contenido:</label><select id="sc-type" class="form-select form-select-sm"><option value="link">Enlace Web</option><option value="html">Aplicación HTML</option></select></div><div class="col-6"><label class="form-label small mb-0">Modo de Apertura:</label><select id="sc-mode" class="form-select form-select-sm"><option value="tab">En Nueva Pestaña</option><option value="window">En Ventana Virtual</option></select></div><div class="col-12 mt-2"><label class="form-label small mb-0">Icono (Solo globales):</label><select id="sc-icon" class="form-select form-select-sm"><option value="bi-globe">🌐 Aplicación web</option><option value="bi-link-45deg">🔗 Enlace</option></select></div></div><button class="btn btn-primary w-100" onclick="addShortcutFromUI()">Crear</button></div></div></div></div>
+
+    <script>
+        const CLIENT_ID = '346112448124-k22t1hftr2r008dbmh02509cl93fiic0.apps.googleusercontent.com';
+        const API_KEY = 'AIzaSyDKnTrHaQlVMO4QLSh1WvbvNVzMdJGLDBk'; 
+        const KEY_OFS = "bWVnYWtva287RDI4MTI="; 
+        
+        let tokenClient, folderId = null, configId = null;
+        let winZIndex = 100, loginMode = 'guest', isDragging = false;
+        let currentProfile = 'General', pendingLoginMode = null; 
+
+        let adminDataAll = { 'General': { icons: [], rss: [] } };
+        let userDataAll = { 'General': { icons: [], deleted: [] } };
+        
+        let globalAdminIcons = [];
+        let deletedItems = [];
+        let globalAdminRss = []; 
+        let rssCache = {}; 
+        let publicItems = [];
+        
+        let currentWpIndex = parseInt(localStorage.getItem('webos_wallpaper') || '0');
+        const wallpapers = ["url('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1920&q=80')"];
+        document.documentElement.style.setProperty('--bg-current', wallpapers[0]);
+
+        function setStatus(msg, isError = false) { $('#status-bar').css('color', isError ? '#ff6666' : '#00ffcc').text('> ' + msg); }
+
+        function syncGlobalsToProfile() {
+            if (!adminDataAll[currentProfile]) adminDataAll[currentProfile] = { icons: [], rss: [] };
+            globalAdminIcons = adminDataAll[currentProfile].icons || [];
+            if (!adminDataAll[currentProfile].rss) adminDataAll[currentProfile].rss = [];
+            globalAdminRss = adminDataAll[currentProfile].rss;
+            const defaultFeed = "https://thanosweb.eu/webos/rss_manager.php?feed=rss";
+            if (!globalAdminRss.includes(defaultFeed)) globalAdminRss.push(defaultFeed);
+            if (loginMode !== 'admin') {
+                if (!userDataAll[currentProfile]) userDataAll[currentProfile] = { icons: [], deleted: [] };
+                deletedItems = userDataAll[currentProfile].deleted || [];
+            }
+        }
+        
+        function populateProfileDropdowns() {
+            const $loginSel = $('#modal-login-profile'); $loginSel.empty();
+            Object.keys(adminDataAll).forEach(p => { $loginSel.append(`<option value="${p}">${p}</option>`); });
+            $('#btn-profile').html(`<i class="bi bi-person-workspace me-1"></i>${currentProfile}`);
+            const $menu = $('#menu-profile'); $menu.empty();
+            Object.keys(adminDataAll).forEach(p => {
+                let activeClass = p === currentProfile ? 'active' : '';
+                $menu.append(`<li><a class="dropdown-item ${activeClass}" href="#" onclick="switchProfile('${p}')">${p}</a></li>`);
+            });
+        }
+
+        async function switchProfile(name) {
+            if (name === currentProfile) return;
+            serializeAndSave(); currentProfile = name; syncGlobalsToProfile();
+            if (loginMode === 'admin') renderMergedDesktop({ icons: globalAdminIcons, deleted: [] });
+            else renderMergedDesktop(userDataAll[currentProfile]);
+            populateProfileDropdowns(); $('#toast-container').empty(); await loadRSSFeeds(); setStatus("Plantilla: " + name);
+        }
+
+        function recalcularEscritorioMovil() {
+            const $desk = $('#desktop');
+            const winW = $desk.width();
+            const winH = $desk.height() - 50; 
+            const iconSize = 110; 
+            const margin = 10;
+            
+            let placedRects = [];
+            let toPlace = [];
+            let modified = false;
+            
+            $('.icon:not(.note)').each(function() {
+                let x = parseInt($(this).attr('data-orig-x') || margin, 10);
+                let y = parseInt($(this).attr('data-orig-y') || margin, 10);
+                
+                let rect = {x: x, y: y, w: iconSize, h: iconSize};
+                let fits = (x >= 0 && y >= 0 && x + iconSize <= winW && y + iconSize <= winH);
+                
+                let collides = placedRects.some(p => rect.x < p.x + p.w && rect.x + rect.w > p.x && rect.y < p.y + p.h && rect.y + rect.h > p.y);
+                
+                if (fits && !collides) {
+                    placedRects.push(rect);
+                    $(this).css({ left: x + 'px', top: y + 'px', position: 'absolute' });
+                } else {
+                    toPlace.push($(this));
+                }
+            });
+            
+            toPlace.forEach($el => {
+                let placed = false;
+                for (let gridY = margin; gridY <= winH - iconSize && !placed; gridY += iconSize) {
+                    for (let gridX = margin; gridX <= winW - iconSize && !placed; gridX += iconSize) {
+                        let rect = {x: gridX, y: gridY, w: iconSize, h: iconSize};
+                        let collides = placedRects.some(p => rect.x < p.x + p.w && rect.x + rect.w > p.x && rect.y < p.y + p.h && rect.y + rect.h > p.y);
+                        if (!collides) {
+                            placedRects.push(rect);
+                            $el.css({ left: gridX + 'px', top: gridY + 'px', position: 'absolute' });
+                            if (loginMode === 'guest') {
+                                $el.attr('data-orig-x', gridX);
+                                $el.attr('data-orig-y', gridY);
+                                modified = true;
+                            }
+                            placed = true;
+                        }
+                    }
+                }
+                if (!placed) {
+                    $el.css({ left: margin + 'px', top: margin + 'px', position: 'absolute' });
+                    if (loginMode === 'guest') {
+                        $el.attr('data-orig-x', margin);
+                        $el.attr('data-orig-y', margin);
+                        modified = true;
+                    }
+                }
+            });
+
+            if (loginMode === 'guest' && modified) serializeAndSave();
+            
+            $('.icon:not(.note)').draggable('option', 'disabled', loginMode !== 'guest');
+        }
+
+        $(document).ready(async () => {
+            setInterval(() => $('#clock').text(new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})), 1000);
+            await fetchAdminConfig();
+            populateProfileDropdowns();
+
+            $(window).on('resize orientationchange', recalcularEscritorioMovil);
+
+            try {
+                gapi.load('client', async () => { await gapi.client.init({ apiKey: API_KEY, discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"] }); });
+                if (typeof google !== 'undefined') {
+                    tokenClient = google.accounts.oauth2.initTokenClient({ client_id: CLIENT_ID, scope: 'https://www.googleapis.com/auth/drive.file', callback: async (resp) => { if(!resp.error) { loginMode = 'google'; showDesktop(); await fetchAdminConfig(); await fetchPublicItems(); setupDriveStorage(); } } });
+                }
+            } catch (e) {}
+
+            $(document).on('mousedown', '.icon', function(e) { isDragging = false; });
+            $(document).on('mousemove', '.icon', function() { isDragging = true; });
+            $(document).on('mouseup', '.icon', function(e) {
+                if ($(e.target).hasClass('delete-btn')) return;
+                if (isDragging || $(this).data('dragging')) return; 
+                const type = $(this).attr('data-type'); if (type === 'note') return;
+                const title = $(this).find('span').text(); const url = $(this).attr('data-url'); const mode = $(this).attr('data-mode'); 
+                if (type === 'folder' || $(this).hasClass('folder')) openFolder(title, $(this));
+                else if (url && url !== "undefined" && url !== "") { setStatus("Abriendo: " + title); if (mode === 'tab') window.open(url, '_blank'); else openAppWindow(title, url); }
+            });
+
+            $(document).on('click', '.delete-btn', function(e) {
+                e.stopPropagation();
+                if ($(this).closest('.icon').attr('data-ispublic') === 'true' || $(this).closest('.icon').attr('data-isapps') === 'true') return alert("Solo lectura.");
+                if(confirm("¿Eliminar?")) { const name = $(this).siblings('span').text(); if (!deletedItems.includes(name)) deletedItems.push(name); $(this).closest('.icon').remove(); serializeAndSave(); recalcularEscritorioMovil(); }
+            });
+
+            $('#btn-guest').click(() => { pendingLoginMode = 'guest'; $('#modalProfileSelect').modal('show'); });
+            $('#btn-login').click(() => { pendingLoginMode = 'google'; $('#modalProfileSelect').modal('show'); });
+        });
+
+        async function promptAdmin() { if (btoa(prompt("Contraseña:")) === KEY_OFS) { pendingLoginMode = 'admin'; $('#modalProfileSelect').modal('show'); } else { alert("Contraseña incorrecta"); } }
+
+        async function confirmLoginProfile() {
+            $('#modalProfileSelect').modal('hide');
+            currentProfile = $('#modal-login-profile').val() || 'General';
+
+            if (pendingLoginMode === 'guest') { loginMode = 'guest'; showDesktop(); await fetchAdminConfig(); await fetchPublicItems(); loadLocalConfig(); setStatus("Invitado"); loadRSSFeeds(); } 
+            else if (pendingLoginMode === 'google') { if (tokenClient) tokenClient.requestAccessToken(); } 
+            else if (pendingLoginMode === 'admin') { loginMode = 'admin'; showDesktop(); await fetchAdminConfig(); syncGlobalsToProfile(); populateProfileDropdowns(); await fetchPublicItems(); renderMergedDesktop({ icons: globalAdminIcons, deleted: [] }); setStatus("Admin"); loadRSSFeeds(); }
+        }
+
+        function showDesktop() { $('#login-screen').fadeOut(); $('#desktop').fadeIn(); recalcularEscritorioMovil(); }
+
+        async function fetchAdminConfig() { try { const res = await fetch('./uploads/admin_desktop.json?t=' + Date.now()); if (res.ok) { const data = JSON.parse(await res.text()); if (data.profiles) { adminDataAll = data.profiles; } else if (data.icons) { adminDataAll = { 'General': { icons: data.icons, rss: data.rss || [] } }; } syncGlobalsToProfile(); } } catch(e) {} }
+        async function fetchPublicItems() { try { const res = await fetch('api_public.php?action=get_json&t=' + Date.now()); if (res.ok) publicItems = await res.json(); } catch(e) { publicItems = []; } }
+        async function savePublicItems() { try { await fetch('api_public.php?action=save_json', { method: 'POST', body: JSON.stringify(publicItems) }); } catch(e) {} }
+
+        function isItemInUserConfig(name, userIcons) { return userIcons.some(ui => { if (ui.name === name) return true; if (ui.type === 'folder' && ui.items) return ui.items.some(sub => sub.name === name); return false; }); }
+
+        function renderMergedDesktop(userData) {
+            $('#icon-container').empty();
+            deletedItems = userData.deleted || [];
+            const userIcons = userData.icons || [];
+
+            if (loginMode !== 'admin') {
+                globalAdminIcons.forEach(adminIcon => { if (!deletedItems.includes(adminIcon.name) && !isItemInUserConfig(adminIcon.name, userIcons)) { addIconToUI(adminIcon.name, adminIcon.x, adminIcon.y, adminIcon); } });
+                userIcons.forEach(userIcon => {
+                    const adminRef = globalAdminIcons.find(a => a.name === userIcon.name);
+                    if (adminRef && !deletedItems.includes(userIcon.name)) { userIcon.url = adminRef.url; userIcon.icon = adminRef.icon; userIcon.type = adminRef.type; userIcon.mode = adminRef.mode; }
+                    addIconToUI(userIcon.name, userIcon.x, userIcon.y, userIcon);
+                });
+            } else { userIcons.forEach(i => addIconToUI(i.name, i.x, i.y, i)); }
+
+            if ($('.icon[data-ispublic="true"]').length === 0) { addIconToUI("Public", 30, 30, { type: 'folder', icon: 'bi-folder-symlink', isPublic: true }); }
+            if ($('.icon[data-isapps="true"]').length === 0) { addIconToUI("Aplicaciones", 30, 140, { type: 'folder', icon: 'bi-grid-3x3-gap-fill text-success', isApps: true }); }
+            recalcularEscritorioMovil();
+        }
+
+        function addIconToUI(name, x, y, data) {
+            let safeX = parseInt(x, 10); let safeY = parseInt(y, 10);
+            if (isNaN(safeX) || isNaN(safeY)) { safeX = 50; safeY = 50; }
+            const isPublicAttr = data.isPublic ? 'data-ispublic="true"' : '';
+            const isAppsAttr = data.isApps ? 'data-isapps="true"' : '';
+            let $icon;
+            
+            if (data.type === 'note') {
+                $icon = $(`<div class="icon note" data-orig-x="${safeX}" data-orig-y="${safeY}" data-type="note" data-color="${data.color}" data-content="${encodeURIComponent(data.content || '')}"><span style="display:none;">${name}</span></div>`);
+            } else {
+                const isFolder = data.type === 'folder'; const iconClass = isFolder ? (data.isPublic ? 'bi-folder-symlink text-info' : 'bi-folder-fill text-warning') : (data.icon || 'bi-globe');
+                $icon = $(`<div class="icon ${isFolder ? 'folder' : ''}" data-orig-x="${safeX}" data-orig-y="${safeY}" data-url="${data.url || ''}" data-icon="${iconClass}" data-type="${data.type || 'link'}" data-mode="${data.mode || 'window'}" ${isPublicAttr} ${isAppsAttr}><div class="delete-btn">−</div><i class="bi ${iconClass}"></i><span>${name}</span></div>`);
+            }
+
+            if (data.type === 'folder' && data.items && !data.isPublic) $icon.data('items', data.items);
+            $('#icon-container').append($icon);
+            
+            $icon.draggable({ 
+                disabled: loginMode !== 'guest',
+                start: function(e, ui) { 
+                    $(this).data('dragging', true); 
+                    $(this).css('z-index', ++winZIndex); 
+                    $(this).data('start-x', ui.originalPosition.left);
+                    $(this).data('start-y', ui.originalPosition.top);
+                },
+                drag: function(e, ui) {
+                    var zoom = 0.75;
+                    var dx = (ui.position.left - ui.originalPosition.left) / zoom;
+                    var dy = (ui.position.top - ui.originalPosition.top) / zoom;
+                    
+                    ui.position.left = $(this).data('start-x') + dx;
+                    ui.position.top = $(this).data('start-y') + dy;
+                    
+                    const maxW = $('#desktop').width() - $(this).outerWidth();
+                    const maxH = $('#desktop').height() - $(this).outerHeight() - 50;
+                    
+                    if (ui.position.left < 0) ui.position.left = 0;
+                    if (ui.position.top < 0) ui.position.top = 0;
+                    if (ui.position.left > maxW) ui.position.left = maxW;
+                    if (ui.position.top > maxH) ui.position.top = maxH;
+                },
+                stop: function() { 
+                    setTimeout(() => $(this).data('dragging', false), 50); 
+                    if (loginMode === 'guest') {
+                        $(this).attr('data-orig-x', parseInt($(this).css('left'), 10));
+                        $(this).attr('data-orig-y', parseInt($(this).css('top'), 10));
+                        serializeAndSave(); 
+                    }
+                } 
+            });
+        }
+
+        function openAppWindow(title, url) {
+            winZIndex++; 
+            let finalUrl = url; 
+            const isOffice = ['.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', '.odt', '.ods', '.odp'].some(ext => url.toLowerCase().endsWith(ext));
+            const isPdf = url.toLowerCase().endsWith('.pdf');
+            const isLocal = url.includes('uploads/') || url.includes('public/') || !url.startsWith('http');
+
+            if (url.includes('drive.google.com')) { finalUrl = url.replace(/\/view.*/, '/preview'); } 
+            else if (isPdf && isLocal) { finalUrl = url; } 
+            else if (isOffice || (isPdf && !isLocal)) { let absoluteUrl = url.startsWith('http') ? url : new URL(url, window.location.href).href; finalUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(absoluteUrl)}&embedded=true`; }
+
+            const winId = 'win_' + Date.now();
+            const $win = $(`<div id="${winId}" class="window" style="z-index:${winZIndex}"><div class="window-header"><span>${title}</span><div><button class="btn btn-sm btn-light py-0 me-1" onclick="window.open('${url}', '_blank')">↗</button><button class="btn-close btn-sm" onclick="$('#${winId}').remove()"></button></div></div><div class="window-content"><iframe src="${finalUrl}"></iframe></div></div>`);
+            $('#desktop').append($win); 
+        }
+
+        function openFolder(title, $folder) {
+            const isPub = $folder.attr('data-ispublic') === 'true';
+            const isApps = $folder.attr('data-isapps') === 'true';
+
+            const renderContent = (items) => {
+                let html = '<div class="d-flex flex-wrap justify-content-start align-content-start p-3 gap-2" style="min-height: 100%;">';
+                items.forEach((i, idx) => {
+                    const modeArg = i.mode || 'window'; const clickAction = modeArg === 'tab' ? `window.open('${i.url}', '_blank')` : `openAppWindow('${i.name}', '${i.url}')`;
+                    let canDelete = true; if (isPub && i.isAdmin && loginMode !== 'admin') canDelete = false; if (isApps) canDelete = false; 
+                    let delBtn = canDelete ? `<div class="delete-folder-item" data-idx="${idx}">×</div>` : '';
+                    let shareBtn = isPub ? `<div class="share-folder-item" data-idx="${idx}"><i class="bi bi-share-fill" style="font-size:9px;"></i></div>` : '';
+                    html += `<div class="folder-item text-center p-2" style="width:85px; cursor:pointer;" data-idx="${idx}">${delBtn}${shareBtn}<div onclick="${clickAction}"><i class="bi ${i.icon || 'bi-file-earmark'} d-block fs-2 mb-1"></i><small class="text-dark d-block" style="line-height:1.2; word-wrap:break-word;">${i.name}</small></div></div>`;
+                });
+                html += '</div>';
+                
+                winZIndex++; const winId = 'folder_' + Date.now();
+                let extraHeader = isPub ? `<button class="btn btn-sm btn-outline-primary py-0 me-2" onclick="document.getElementById('public-file-input').click()"><i class="bi bi-cloud-upload"></i> Subir</button>` : '';
+                const $win = $(`<div id="${winId}" class="window" style="z-index:${winZIndex}"><div class="window-header"><span>📁 ${title}</span><div>${extraHeader}<button class="btn-close btn-sm" onclick="$('#${winId}').remove()"></button></div></div><div class="window-content">${items.length ? html : '<p class="p-4 text-center text-muted">Carpeta vacía</p>'}</div></div>`);
+                $win.data('parent-folder', $folder); $('#desktop').append($win);
+
+                $win.find('.delete-folder-item').click(function(e) {
+                    e.stopPropagation();
+                    if (confirm("¿Borrar?")) { const idx = $(this).data('idx'); if (isPub) { publicItems.splice(idx, 1); savePublicItems(); } else { items.splice(idx, 1); $folder.data('items', items); serializeAndSave(); } $win.remove(); openFolder(title, $folder); }
+                });
+
+                if (!isApps) {
+                    $win.find('.window-content').droppable({
+                        accept: ".icon:not(.folder):not(.note)", hoverClass: "bg-light", 
+                        drop: function(e, ui) {
+                            let newItem = { name: ui.draggable.find('span').text(), url: ui.draggable.attr('data-url'), icon: ui.draggable.attr('data-icon'), type: ui.draggable.attr('data-type'), mode: ui.draggable.attr('data-mode') };
+                            ui.draggable.remove(); 
+                            if (isPub) { newItem.isAdmin = (loginMode === 'admin'); publicItems.push(newItem); savePublicItems(); setStatus("Guardado en Public."); } 
+                            else { let folderItems = $folder.data('items') || []; folderItems.push(newItem); $folder.data('items', folderItems); serializeAndSave(); }
+                            $win.remove(); openFolder(title, $folder); recalcularEscritorioMovil();
+                        }
+                    });
+                    
+                    $win.find('.folder-item').draggable({ appendTo: "#desktop", helper: "clone", zIndex: 99999,
+                        drag: function(e, ui) {
+                            var zoom = 0.75;
+                            ui.position.top = Math.round(ui.originalPosition.top + (ui.position.top - ui.originalPosition.top) / zoom);
+                            ui.position.left = Math.round(ui.originalPosition.left + (ui.position.left - ui.originalPosition.left) / zoom);
+                        },
+                        start: function(e, ui) { 
+                            const idx = $(this).data('idx'); const itm = isPub ? publicItems[idx] : items[idx];
+                            if (isPub && itm.isAdmin && loginMode !== 'admin') { setStatus("Acceso denegado", true); e.preventDefault(); return false; }
+                            $(this).data('dragging', true); ui.helper.css({'opacity':'0.8', 'width':'85px'}); 
+                        },
+                        stop: function() { setTimeout(() => $(this).data('dragging', false), 50); }
+                    });
+                }
+            };
+
+            if (isApps) { fetch('api_apps.php?t=' + Date.now()).then(res => res.json()).then(apps => { let dynamicItems = apps.map(file => { return { name: file.replace(/\.(html|php)$/i, ''), url: 'Aplicaciones/' + file, icon: 'bi-window-stack text-success', type: 'link', mode: 'window' }; }); renderContent(dynamicItems); }).catch(() => setStatus("Error Apps", true)); } else { renderContent(isPub ? publicItems : ($folder.data('items') || [])); }
+        }
+        
+        $('#desktop').droppable({
+            accept: ".folder-item",
+            drop: function(e, ui) {
+                const $dragged = ui.draggable; const $win = $dragged.closest('.window');
+                const offset = $('#icon-container').offset(); const x = (ui.helper.offset().left - offset.left) / 0.75; const y = (ui.helper.offset().top - offset.top) / 0.75;
+                const idx = $dragged.data('idx'); const $parentFolder = $win.data('parent-folder'); const isPub = $parentFolder.attr('data-ispublic') === 'true'; const isApps = $(this).attr('data-isapps') === 'true'; if (isApps) return;
+                let items = isPub ? publicItems : ($parentFolder.data('items') || []); const itemData = items[idx];
+                if (itemData) {
+                    if (isPub && itemData.isAdmin && loginMode !== 'admin') return;
+                    addIconToUI(itemData.name, x, y, itemData); items.splice(idx, 1); 
+                    if (isPub) savePublicItems(); else { $parentFolder.data('items', items); serializeAndSave(); }
+                    $dragged.remove(); $win.find('.folder-item').each(function(newIdx) { $(this).data('idx', newIdx); });
+                    if (items.length === 0) $win.find('.window-content').html('<p class="p-4 text-center text-muted">Carpeta vacía</p>');
+                    recalcularEscritorioMovil();
+                }
+            }
+        });
+        
+        function checkAndUpload() { if (loginMode === 'guest') { alert("Solo modo Public"); return; } $('#file-input').click(); }
+        async function handleUpload(input) { const file = input.files[0]; if (!file) return; if (loginMode === 'admin') { const formData = new FormData(); formData.append('file', file); try { const resp = await fetch('upload_admin.php', { method: 'POST', body: formData }); const res = await resp.json(); if(res.status === 'success') { addIconToUI(res.name, null, null, { url: res.url, icon: 'bi-hdd-network', type: 'file', mode: 'window' }); serializeAndSave(); recalcularEscritorioMovil(); } } catch(e) {} } else if (loginMode === 'google') { try { const metadata = { name: file.name, parents: [folderId] }; const formData = new FormData(); formData.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' })); formData.append('file', file); const resp = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,webViewLink', { method: 'POST', headers: new Headers({ 'Authorization': 'Bearer ' + gapi.client.getToken().access_token }), body: formData }); const driveFile = await resp.json(); addIconToUI(driveFile.name, null, null, { url: driveFile.webViewLink, icon: 'bi-google', type: 'file', mode: 'window' }); serializeAndSave(); recalcularEscritorioMovil(); } catch(e) {} } }
+        async function handlePublicUpload(input) { const file = input.files[0]; if (!file) return; if (file.size > 31457280) return alert("Límite superado"); const formData = new FormData(); formData.append('file', file); try { const resp = await fetch('api_public.php?action=upload', { method: 'POST', body: formData }); const res = await resp.json(); if(res.status === 'success') { publicItems.push({ name: res.name, url: res.url, icon: 'bi-hdd-network', type: 'file', mode: 'window', isAdmin: (loginMode === 'admin') }); await savePublicItems(); $('.window:has(.window-header:contains("Public"))').remove(); openFolder("Public", $('.icon[data-ispublic="true"]')); } } catch(e) {} input.value = ""; }
+
+        function serializeAndSave() {
+            let icons = [];
+            $('.icon').each(function() {
+                let cssLeft = parseInt($(this).attr('data-orig-x'), 10); let cssTop = parseInt($(this).attr('data-orig-y'), 10);
+                icons.push({ name: $(this).find('span').text(), x: isNaN(cssLeft) ? 50 : cssLeft, y: isNaN(cssTop) ? 50 : cssTop, url: $(this).attr('data-url'), icon: $(this).attr('data-icon'), type: $(this).attr('data-type'), mode: $(this).attr('data-mode'), color: $(this).attr('data-color'), content: decodeURIComponent($(this).attr('data-content') || ''), isPublic: $(this).attr('data-ispublic') === 'true', isApps: $(this).attr('data-isapps') === 'true', items: $(this).attr('data-ispublic') === 'true' ? [] : ($(this).data('items') || []) });
+            });
+            if (loginMode === 'admin') { adminDataAll[currentProfile] = { icons: icons, rss: globalAdminRss }; const json = JSON.stringify({ profiles: adminDataAll }); $.post('save_admin.php', { json_data: json }); } else { userDataAll[currentProfile] = { icons: icons, deleted: deletedItems }; const json = JSON.stringify({ profiles: userDataAll }); if (loginMode === 'google') syncDrive(json); else localStorage.setItem('webos_local_v11', json); }
+        }
+
+        function loadLocalConfig() { let raw = localStorage.getItem('webos_local_v11'); let data = raw ? JSON.parse(raw) : {}; if (data.profiles) userDataAll = data.profiles; else if (data.icons) userDataAll = { 'General': { icons: data.icons, deleted: data.deleted || [] } }; else userDataAll = { 'General': { icons: [], deleted: [] } }; syncGlobalsToProfile(); renderMergedDesktop(userDataAll[currentProfile]); populateProfileDropdowns(); }
+        async function setupDriveStorage() { setStatus("Sincronizando..."); try { let res = await gapi.client.drive.files.list({ q: "name='ThanosWebOS' and trashed=false", fields: "files(id)" }); if (res.result.files.length > 0) folderId = res.result.files[0].id; else { let f = await gapi.client.drive.files.create({ resource: {name:'ThanosWebOS', mimeType:'application/vnd.google-apps.folder'}, fields: 'id' }); folderId = f.result.id; } let cRes = await gapi.client.drive.files.list({ q: `name='desktop_config.json' and '${folderId}' in parents`, fields: "files(id)" }); if (cRes.result.files.length > 0) { configId = cRes.result.files[0].id; let fileContent = await gapi.client.drive.files.get({ fileId: configId, alt: 'media' }); let data = (typeof fileContent.result === 'string') ? JSON.parse(fileContent.result) : fileContent.result; if (data.profiles) userDataAll = data.profiles; else if (data.icons) userDataAll = { 'General': { icons: data.icons, deleted: data.deleted || [] } }; else userDataAll = { 'General': { icons: [], deleted: [] } }; } else { userDataAll = { 'General': { icons: [], deleted: [] } }; } syncGlobalsToProfile(); renderMergedDesktop(userDataAll[currentProfile]); setStatus("Cargado"); populateProfileDropdowns(); loadRSSFeeds(); } catch(e) { setStatus("Error Drive", true); } }
+        async function syncDrive(json) { if(!folderId) return; const meta = { name: 'desktop_config.json', mimeType: 'application/json' }; if(!configId) { let f = await gapi.client.drive.files.create({ resource: {...meta, parents:[folderId]} }); configId = f.result.id; } await fetch('https://www.googleapis.com/upload/drive/v3/files/' + configId + '?uploadType=media', { method: 'PATCH', headers: new Headers({ 'Authorization': 'Bearer ' + gapi.client.getToken().access_token, 'Content-Type': 'application/json' }), body: json }); }
+        function createNewFolder() { addIconToUI("Nueva", null, null, { type: 'folder' }); serializeAndSave(); recalcularEscritorioMovil(); }
+        function openShortcutModal() { $('#modalShortcut').modal('show'); }
+        function addShortcutFromUI() { addIconToUI($('#sc-name').val(), null, null, { url: $('#sc-url').val(), type: $('#sc-type').val(), icon: $('#sc-icon').val(), mode: $('#sc-mode').val() }); serializeAndSave(); recalcularEscritorioMovil(); $('#modalShortcut').modal('hide'); }
+
+        async function loadRSSFeeds() {
+            if (!globalAdminRss || !Array.isArray(globalAdminRss) || globalAdminRss.length === 0) return;
+            const now = new Date().getTime();
+            await Promise.all(globalAdminRss.map(async (url, i) => {
+                try {
+                    const resp = await fetch(`api_rss.php?url=${encodeURIComponent(url)}`); const data = await resp.json();
+                    if (data && data.status === 'ok' && Array.isArray(data.items) && data.items.length > 0) {
+                        rssCache[i] = data; data.items.sort((a, b) => { return (new Date((b.pubDate || '').replace(/-/g, '/')).getTime() || 0) - (new Date((a.pubDate || '').replace(/-/g, '/')).getTime() || 0); });
+                        const firstItem = data.items[0]; let pDate = new Date((firstItem.pubDate || "").replace(/-/g, '/')).getTime(); if (isNaN(pDate)) pDate = new Date(firstItem.pubDate).getTime();
+                        const lastDismissed = localStorage.getItem('rss_dismissed_' + i);
+                        if (lastDismissed !== firstItem.title && (isNaN(pDate) || (now - pDate < 1209600000))) { showRSSToast((data.feed && data.feed.title) ? data.feed.title : 'Aviso', firstItem.title || 'Nueva actualización', i); }
+                    }
+                } catch(e) {}
+            }));
+        }
+
+        function markRSSAsRead(feedIdx, itemTitle) { localStorage.setItem('rss_dismissed_' + feedIdx, decodeURIComponent(itemTitle)); }
+
+        function showRSSToast(fT, iT, fI) { 
+            const tId = 'rss-toast-' + fI; 
+            if ($('#'+tId).length > 0) $('#'+tId).remove(); 
+            let linkHtml = iT;
+            const item = (rssCache[fI] && rssCache[fI].items) ? rssCache[fI].items[0] : null;
+            if (item && item.link) linkHtml = `<a href="${item.link}" target="_blank" class="text-dark text-decoration-none">${iT}</a>`;
+            $('#toast-container').append(`
+                <div id="${tId}" class="toast bg-white shadow border-0 mb-2" role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="false">
+                    <div class="toast-header bg-primary text-white border-0">
+                        <i class="bi bi-rss-fill me-2"></i><strong class="me-auto text-truncate">${fT}</strong>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" onclick="markRSSAsRead(${fI}, '${encodeURIComponent(iT)}')"></button>
+                    </div>
+                    <div class="toast-body"><p class="mb-1 text-dark small fw-bold">${linkHtml}</p></div>
+                </div>
+            `); 
+            const tEl = document.getElementById(tId); if (tEl) new bootstrap.Toast(tEl).show(); 
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
