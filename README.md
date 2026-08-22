@@ -1,7 +1,3 @@
-import base64
-
-readme_content = """# Escritorio Docente (WebOS)
-
 Entorno de escritorio virtual (*WebOS*) ligero, modular y ejecutable en navegador, diseñado para la gestión de recursos didácticos, distribución documental y ejecución de microaplicaciones en entornos educativos.
 
 ---
