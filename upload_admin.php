@@ -1,5 +1,8 @@
 <?php
 header('Content-Type: application/json');
+require_once __DIR__ . '/auth_check.php';
+check_admin_auth();
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['file'])) {
     $dir = './uploads/';
     if (!file_exists($dir)) { mkdir($dir, 0777, true); }
