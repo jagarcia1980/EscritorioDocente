@@ -15,7 +15,7 @@ $db   = '';
 $user = ''; 
 $pass = '';
 
-
+$admin_secret = 'TU_CLAVE';
 $apiKey = getenv('GOOGLE_API_KEY') ?: ''; 
 $GEMINI_API_KEY  = $apiKey;
 $charset = 'utf8mb4';
