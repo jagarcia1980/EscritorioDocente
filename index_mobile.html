@@ -15,6 +15,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui-touch-punch/0.2.3/jquery.ui.touch-punch.min.js"></script>
 
     <style>
+        
         :root { --bg-current: url('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1920&q=80'); }
         body, html { height: 100%; width: 100%; margin: 0; overflow: hidden; position: fixed; overscroll-behavior: none; font-family: 'Segoe UI', sans-serif; background: #1a252f; touch-action: none; }
         
@@ -29,7 +30,7 @@
             position: absolute; 
             top: 0; left: 0;
             zoom: 0.75; 
-            -moz-transform: scale(0.75); 
+            -moz-transform: scale(0.35); 
             -moz-transform-origin: top left;
             overflow: hidden;
             overscroll-behavior: none;
@@ -81,8 +82,10 @@
     <div id="admin-indicator" class="admin-badge">MODO ADMINISTRADOR</div>
 
     <div id="login-screen">
-        <h1 class="display-4 fw-bold mb-4 text-center">Escritorio Móvil</h1>
+        <h1 class="display-4 fw-bold mb-4 text-center">Escritorio Docente Móvil (Lite)</h1>
+        <h6 class="offcanvas-title fw-bold"><i class="bi bi-shield-exclamation text-warning me-1"></i> Para evitar solapamientos, utiliza el modo de pantalla apaisado  &nbsp;(LANDSCAPE MODE).</h6>
         <div class="d-grid gap-3 col-10 col-md-8 mx-auto">
+            
             <button id="btn-login" class="btn btn-primary rounded-pill shadow mt-2">Iniciar con Google Drive</button>
             <button id="btn-guest" class="btn btn-outline-light rounded-pill">Entrar como Invitado (Local)</button>
             <button onclick="promptAdmin()" class="btn btn-link btn-sm text-white-50 mt-2 text-decoration-none">Acceso administrador</button>
@@ -108,24 +111,25 @@
                 <div id="status-bar">> Modo móvil listo.</div>
             </div>
             <div class="text-white-50 small d-flex align-items-center">
+                <i class="bi bi-arrows-fullscreen me-3 fs-6" id="btn-fullscreen" style="cursor:pointer;" onclick="toggleFullScreen()" title="Pantalla completa"></i>
                 <span id="clock" class="me-3">00:00</span>
                 <button class="btn btn-sm btn-danger py-0" onclick="location.reload()">Salir</button>
             </div>
         </nav>
     </div>
 
-    <div class="modal fade" id="modalProfileSelect" tabindex="-1" data-bs-backdrop="static"><div class="modal-dialog modal-sm modal-dialog-centered"><div class="modal-content text-dark"><div class="modal-header py-2 bg-light"><h6 class="modal-title fw-bold"><i class="bi bi-person-workspace me-1"></i> Seleccionar Perfil</h6><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body text-center"><select id="modal-login-profile" class="form-select form-select-sm mb-3 text-center fw-bold"></select><button class="btn btn-primary w-100 rounded-pill shadow-sm" onclick="confirmLoginProfile()">Continuar</button></div></div></div></div>
+    <div class="modal fade" id="modalProfileSelect" tabindex="-1" data-bs-backdrop="static"><div class="modal-dialog modal-sm modal-dialog-centered"><div class="modal-content text-dark"><div class="modal-header py-2 bg-light"><h6 class="modal-title fw-bold"><i class="bi bi-person-workspace me-1"></i> Seleccionar Perfil</h6><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body text-center"><select id="modal-login-profile" class="form-select form-select-sm mb-3 text-center fw-bold"></select><button class="btn-primary btn w-100 rounded-pill shadow-sm" onclick="confirmLoginProfile()">Continuar</button></div></div></div></div>
     
     <div class="modal fade" id="modalShortcut" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header py-2"><h6>Nuevo Acceso</h6><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><input type="text" id="sc-name" class="form-control mb-2" placeholder="Nombre del acceso directo"><input type="text" id="sc-url" class="form-control mb-2" placeholder="URL (https://...)"><div class="row g-2 mb-3"><div class="col-6"><label class="form-label small mb-0">Tipo de Contenido:</label><select id="sc-type" class="form-select form-select-sm"><option value="link">Enlace Web</option><option value="html">Aplicación HTML</option></select></div><div class="col-6"><label class="form-label small mb-0">Modo de Apertura:</label><select id="sc-mode" class="form-select form-select-sm"><option value="tab">En Nueva Pestaña</option><option value="window">En Ventana Virtual</option></select></div><div class="col-12 mt-2"><label class="form-label small mb-0">Icono (Solo globales):</label><select id="sc-icon" class="form-select form-select-sm"><option value="bi-globe">🌐 Aplicación web</option><option value="bi-link-45deg">🔗 Enlace</option></select></div></div><button class="btn btn-primary w-100" onclick="addShortcutFromUI()">Crear</button></div></div></div></div>
 
     <script>
         const CLIENT_ID = '346112448124-k22t1hftr2r008dbmh02509cl93fiic0.apps.googleusercontent.com';
         const API_KEY = 'AIzaSyDKnTrHaQlVMO4QLSh1WvbvNVzMdJGLDBk'; 
-        const KEY_OFS = "bWVnYWtva287RDI4MTI="; 
         
         let tokenClient, folderId = null, configId = null;
         let winZIndex = 100, loginMode = 'guest', isDragging = false;
         let currentProfile = 'General', pendingLoginMode = null; 
+        let adminToken = null;
 
         let adminDataAll = { 'General': { icons: [], rss: [] } };
         let userDataAll = { 'General': { icons: [], deleted: [] } };
@@ -140,6 +144,34 @@
         const wallpapers = ["url('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1920&q=80')"];
         document.documentElement.style.setProperty('--bg-current', wallpapers[0]);
 
+        const esMovil = /Android|iPhone|iPad|iPod|Windows Phone/i.test(navigator.userAgent) || ('ontouchstart' in window && navigator.maxTouchPoints > 0);
+
+        async function intentarApaisado() {
+            if (!esMovil) return;
+
+            try {
+                if (screen.orientation?.lock) {
+                await screen.orientation.lock("landscape");
+            }
+            } catch (e) {
+            // El navegador no permite bloquear la orientación.
+            }
+        }
+
+        intentarApaisado();
+
+        function toggleFullScreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(() => {
+                    setStatus("Pantalla completa no permitida por el navegador", true);
+                });
+            } else {
+                if (document.exitFullscreen) document.exitFullscreen();
+            }
+        }        
+        
+        
+        
         function setStatus(msg, isError = false) { $('#status-bar').css('color', isError ? '#ff6666' : '#00ffcc').text('> ' + msg); }
 
         function syncGlobalsToProfile() {
@@ -270,7 +302,27 @@
             $('#btn-login').click(() => { pendingLoginMode = 'google'; $('#modalProfileSelect').modal('show'); });
         });
 
-        async function promptAdmin() { if (btoa(prompt("Contraseña:")) === KEY_OFS) { pendingLoginMode = 'admin'; $('#modalProfileSelect').modal('show'); } else { alert("Contraseña incorrecta"); } }
+        async function promptAdmin() {
+            const password = prompt("Contraseña:");
+            if (!password) return;
+            try {
+                const resp = await fetch('login.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams({ password: password })
+                });
+                const res = await resp.json();
+                if (res.status === 'success') {
+                    adminToken = res.token;
+                    pendingLoginMode = 'admin';
+                    $('#modalProfileSelect').modal('show');
+                } else {
+                    alert("Contraseña incorrecta");
+                }
+            } catch (e) {
+                alert("Error de conexión con el servidor");
+            }
+        }
 
         async function confirmLoginProfile() {
             $('#modalProfileSelect').modal('hide');
@@ -281,7 +333,7 @@
             else if (pendingLoginMode === 'admin') { loginMode = 'admin'; showDesktop(); await fetchAdminConfig(); syncGlobalsToProfile(); populateProfileDropdowns(); await fetchPublicItems(); renderMergedDesktop({ icons: globalAdminIcons, deleted: [] }); setStatus("Admin"); loadRSSFeeds(); }
         }
 
-        function showDesktop() { $('#login-screen').fadeOut(); $('#desktop').fadeIn(); recalcularEscritorioMovil(); }
+        function showDesktop() { $('#login-screen').fadeOut(); $('#desktop').fadeIn(); toggleFullScreen(); recalcularEscritorioMovil(); }
 
         async function fetchAdminConfig() { try { const res = await fetch('./uploads/admin_desktop.json?t=' + Date.now()); if (res.ok) { const data = JSON.parse(await res.text()); if (data.profiles) { adminDataAll = data.profiles; } else if (data.icons) { adminDataAll = { 'General': { icons: data.icons, rss: data.rss || [] } }; } syncGlobalsToProfile(); } } catch(e) {} }
         async function fetchPublicItems() { try { const res = await fetch('api_public.php?action=get_json&t=' + Date.now()); if (res.ok) publicItems = await res.json(); } catch(e) { publicItems = []; } }
@@ -451,7 +503,37 @@
         });
         
         function checkAndUpload() { if (loginMode === 'guest') { alert("Solo modo Public"); return; } $('#file-input').click(); }
-        async function handleUpload(input) { const file = input.files[0]; if (!file) return; if (loginMode === 'admin') { const formData = new FormData(); formData.append('file', file); try { const resp = await fetch('upload_admin.php', { method: 'POST', body: formData }); const res = await resp.json(); if(res.status === 'success') { addIconToUI(res.name, null, null, { url: res.url, icon: 'bi-hdd-network', type: 'file', mode: 'window' }); serializeAndSave(); recalcularEscritorioMovil(); } } catch(e) {} } else if (loginMode === 'google') { try { const metadata = { name: file.name, parents: [folderId] }; const formData = new FormData(); formData.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' })); formData.append('file', file); const resp = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,webViewLink', { method: 'POST', headers: new Headers({ 'Authorization': 'Bearer ' + gapi.client.getToken().access_token }), body: formData }); const driveFile = await resp.json(); addIconToUI(driveFile.name, null, null, { url: driveFile.webViewLink, icon: 'bi-google', type: 'file', mode: 'window' }); serializeAndSave(); recalcularEscritorioMovil(); } catch(e) {} } }
+        async function handleUpload(input) {
+            const file = input.files[0];
+            if (!file) return;
+            if (loginMode === 'admin') {
+                const formData = new FormData();
+                formData.append('file', file);
+                try {
+                    const headers = {};
+                    if (adminToken) headers['Authorization'] = 'Bearer ' + adminToken;
+                    const resp = await fetch('upload_admin.php', { method: 'POST', headers: headers, body: formData });
+                    const res = await resp.json();
+                    if(res.status === 'success') {
+                        addIconToUI(res.name, null, null, { url: res.url, icon: 'bi-hdd-network', type: 'file', mode: 'window' });
+                        serializeAndSave();
+                        recalcularEscritorioMovil();
+                    }
+                } catch(e) {}
+            } else if (loginMode === 'google') {
+                try {
+                    const metadata = { name: file.name, parents: [folderId] };
+                    const formData = new FormData();
+                    formData.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+                    formData.append('file', file);
+                    const resp = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,webViewLink', { method: 'POST', headers: new Headers({ 'Authorization': 'Bearer ' + gapi.client.getToken().access_token }), body: formData });
+                    const driveFile = await resp.json();
+                    addIconToUI(driveFile.name, null, null, { url: driveFile.webViewLink, icon: 'bi-google', type: 'file', mode: 'window' });
+                    serializeAndSave();
+                    recalcularEscritorioMovil();
+                } catch(e) {}
+            }
+        }
         async function handlePublicUpload(input) { const file = input.files[0]; if (!file) return; if (file.size > 31457280) return alert("Límite superado"); const formData = new FormData(); formData.append('file', file); try { const resp = await fetch('api_public.php?action=upload', { method: 'POST', body: formData }); const res = await resp.json(); if(res.status === 'success') { publicItems.push({ name: res.name, url: res.url, icon: 'bi-hdd-network', type: 'file', mode: 'window', isAdmin: (loginMode === 'admin') }); await savePublicItems(); $('.window:has(.window-header:contains("Public"))').remove(); openFolder("Public", $('.icon[data-ispublic="true"]')); } } catch(e) {} input.value = ""; }
 
         function serializeAndSave() {
@@ -460,7 +542,21 @@
                 let cssLeft = parseInt($(this).attr('data-orig-x'), 10); let cssTop = parseInt($(this).attr('data-orig-y'), 10);
                 icons.push({ name: $(this).find('span').text(), x: isNaN(cssLeft) ? 50 : cssLeft, y: isNaN(cssTop) ? 50 : cssTop, url: $(this).attr('data-url'), icon: $(this).attr('data-icon'), type: $(this).attr('data-type'), mode: $(this).attr('data-mode'), color: $(this).attr('data-color'), content: decodeURIComponent($(this).attr('data-content') || ''), isPublic: $(this).attr('data-ispublic') === 'true', isApps: $(this).attr('data-isapps') === 'true', items: $(this).attr('data-ispublic') === 'true' ? [] : ($(this).data('items') || []) });
             });
-            if (loginMode === 'admin') { adminDataAll[currentProfile] = { icons: icons, rss: globalAdminRss }; const json = JSON.stringify({ profiles: adminDataAll }); $.post('save_admin.php', { json_data: json }); } else { userDataAll[currentProfile] = { icons: icons, deleted: deletedItems }; const json = JSON.stringify({ profiles: userDataAll }); if (loginMode === 'google') syncDrive(json); else localStorage.setItem('webos_local_v11', json); }
+            if (loginMode === 'admin') {
+                adminDataAll[currentProfile] = { icons: icons, rss: globalAdminRss };
+                const json = JSON.stringify({ profiles: adminDataAll });
+                $.ajax({
+                    url: 'save_admin.php',
+                    type: 'POST',
+                    data: { json_data: json },
+                    headers: adminToken ? { 'Authorization': 'Bearer ' + adminToken } : {}
+                });
+            } else {
+                userDataAll[currentProfile] = { icons: icons, deleted: deletedItems };
+                const json = JSON.stringify({ profiles: userDataAll });
+                if (loginMode === 'google') syncDrive(json);
+                else localStorage.setItem('webos_local_v11', json);
+            }
         }
 
         function loadLocalConfig() { let raw = localStorage.getItem('webos_local_v11'); let data = raw ? JSON.parse(raw) : {}; if (data.profiles) userDataAll = data.profiles; else if (data.icons) userDataAll = { 'General': { icons: data.icons, deleted: data.deleted || [] } }; else userDataAll = { 'General': { icons: [], deleted: [] } }; syncGlobalsToProfile(); renderMergedDesktop(userDataAll[currentProfile]); populateProfileDropdowns(); }
