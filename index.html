@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Escritorio Docente - v3.7.1</title>
+    <title>Escritorio Docente - v3.8.1</title>
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
@@ -186,10 +186,9 @@
         </div>
     </div>
     <script>
-        const CLIENT_ID = '';
-        const API_KEY = ''; 
+        const CLIENT_ID = '346112448124-k22t1hftr2r008dbmh02509cl93fiic0.apps.googleusercontent.com';
+        const API_KEY = 'AIzaSyDKnTrHaQlVMO4QLSh1WvbvNVzMdJGLDBk'; 
         const APP_ID = '346112448124';
-        const KEY_OFS = "bWVnYWtva287RDI4MTI="; 
         const SCOPES = 'https://www.googleapis.com/auth/drive.file';
         
         let tokenClient, folderId = null, configId = null;
@@ -197,6 +196,7 @@
         
         let currentProfile = 'General';
         let pendingLoginMode = null; 
+        let adminToken = null;
 
         let adminDataAll = { 'General': { icons: [], rss: [] } };
         let userDataAll = { 'General': { icons: [], deleted: [] } };
@@ -399,10 +399,25 @@
         });
 
         async function promptAdmin() {
-            if (btoa(prompt("Contraseña:")) === KEY_OFS) { 
-                pendingLoginMode = 'admin'; 
-                $('#modalProfileSelect').modal('show'); 
-            } else { alert("Contraseña incorrecta"); }
+            const password = prompt("Contraseña:");
+            if (!password) return;
+            try {
+                const resp = await fetch('login.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams({ password: password })
+                });
+                const res = await resp.json();
+                if (res.status === 'success') {
+                    adminToken = res.token;
+                    pendingLoginMode = 'admin';
+                    $('#modalProfileSelect').modal('show');
+                } else {
+                    alert("Contraseña incorrecta");
+                }
+            } catch (e) {
+                alert("Error de conexión con el servidor");
+            }
         }
 
         async function confirmLoginProfile() {
@@ -424,7 +439,7 @@
             }
         }
 
-        function showDesktop() { $('#login-screen').fadeOut(); $('#desktop').fadeIn(); }
+        function showDesktop() { $('#login-screen').fadeOut(); $('#desktop').fadeIn(); restoreLastWidget();}
 
         async function fetchAdminConfig() {
             try {
@@ -566,7 +581,7 @@
             }
 
             const winId = 'win_' + Date.now();
-            const $win = $(`<div id="${winId}" class="window" style="width:${finalW}px; height:${finalH}px; top:${finalTop}px; left:${finalLeft}px; z-index:${winZIndex}"><div class="window-header"><span>${title}</span><div><button class="btn btn-sm btn-light py-0 me-1" onclick="window.open('${url}', '_blank')">↗</button><button class="btn-close btn-sm" onclick="$('#${winId}').remove()"></button></div></div><div class="window-content"><iframe src="${finalUrl}"></iframe></div></div>`);
+            const $win = $(`<div id="${winId}" class="window" style="width:${finalW}px; height:${finalH}px; top:${finalTop}px; left:${finalLeft}px; z-index:${winZIndex}"><div class="window-header"><span>${title}</span><div><button class="btn btn-sm btn-light py-0 me-1" onclick="window.open('${url}', '_blank')">↗</button><button class="btn-close btn-close-sm" onclick="$('#${winId}').remove()"></button></div></div><div class="window-content"><iframe src="${finalUrl}"></iframe></div></div>`);
             
             $('#desktop').append($win); 
             $win.draggable({ handle: ".window-header", containment: "#desktop", stop: function() { saveWindowMetrics(title, $win); } })
@@ -716,7 +731,13 @@
             const file = input.files[0]; if (!file) return;
             if (loginMode === 'admin') {
                 const formData = new FormData(); formData.append('file', file);
-                try { const resp = await fetch('upload_admin.php', { method: 'POST', body: formData }); const res = await resp.json(); if(res.status === 'success') { addIconToUI(res.name, null, null, { url: res.url, icon: 'bi-hdd-network', type: 'file', mode: 'window' }); serializeAndSave(); } } catch(e) {}
+                try {
+                    const headers = {};
+                    if (adminToken) headers['Authorization'] = 'Bearer ' + adminToken;
+                    const resp = await fetch('upload_admin.php', { method: 'POST', headers: headers, body: formData });
+                    const res = await resp.json();
+                    if(res.status === 'success') { addIconToUI(res.name, null, null, { url: res.url, icon: 'bi-hdd-network', type: 'file', mode: 'window' }); serializeAndSave(); }
+                } catch(e) {}
             } else if (loginMode === 'google') {
                 try { const metadata = { name: file.name, parents: [folderId] }; const formData = new FormData(); formData.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' })); formData.append('file', file); const resp = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,webViewLink', { method: 'POST', headers: new Headers({ 'Authorization': 'Bearer ' + gapi.client.getToken().access_token }), body: formData }); const driveFile = await resp.json(); addIconToUI(driveFile.name, null, null, { url: driveFile.webViewLink, icon: 'bi-google', type: 'file', mode: 'window' }); serializeAndSave(); } catch(e) {}
             }
@@ -741,8 +762,21 @@
                     isPublic: $(this).attr('data-ispublic') === 'true', isApps: $(this).attr('data-isapps') === 'true', items: $(this).attr('data-ispublic') === 'true' ? [] : ($(this).data('items') || []) 
                 });
             });
-            if (loginMode === 'admin') { adminDataAll[currentProfile] = { icons: icons, rss: globalAdminRss }; const json = JSON.stringify({ profiles: adminDataAll }); $.post('save_admin.php', { json_data: json }); } 
-            else { userDataAll[currentProfile] = { icons: icons, deleted: deletedItems }; const json = JSON.stringify({ profiles: userDataAll }); if (loginMode === 'google') syncDrive(json); else localStorage.setItem('webos_local_v11', json); }
+            if (loginMode === 'admin') {
+                adminDataAll[currentProfile] = { icons: icons, rss: globalAdminRss };
+                const json = JSON.stringify({ profiles: adminDataAll });
+                $.ajax({
+                    url: 'save_admin.php',
+                    type: 'POST',
+                    data: { json_data: json },
+                    headers: adminToken ? { 'Authorization': 'Bearer ' + adminToken } : {}
+                });
+            } else {
+                userDataAll[currentProfile] = { icons: icons, deleted: deletedItems };
+                const json = JSON.stringify({ profiles: userDataAll });
+                if (loginMode === 'google') syncDrive(json);
+                else localStorage.setItem('webos_local_v11', json);
+            }
         }
 
         function loadLocalConfig() { 
@@ -906,10 +940,11 @@
         function addWidgetToast(id, name, file) {
             if (activeWidgets.has(id)) return;
             activeWidgets.add(id);
+            localStorage.setItem('webos_last_widget', JSON.stringify({ id, name, file }));
 
             const tId = 'widget-toast-' + id;
             $('#toast-container').append(`
-                <div id="${tId}" class="toast shadow-lg" role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="false" style="width: 320px; margin-bottom: 12px; background: #000; border: 1px solid #000;">
+                <div id="${tId}" class="toast shadow-lg" role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="false" style="width: 340px; margin-bottom: 12px; background: #000; border: 1px solid #000;">
                     <div class="toast-header text-white border-0 py-1" style="background: #111;">
                         <i class="bi bi-puzzle me-2 text-warning"></i>
                         <strong class="me-auto small text-truncate" style="max-width: 220px;">${name}</strong>
@@ -931,10 +966,22 @@
 
         function removeWidgetToast(id) {
             activeWidgets.delete(id);
+            localStorage.removeItem('webos_last_widget');
             $(`#widget-toast-${id}`).remove();
             $(`#btn-w-${id}`).removeClass('btn-secondary disabled').addClass('btn-primary').text('Añadir');
             setStatus("Widget cerrado");
         }
+
+        function restoreLastWidget() {
+            const raw = localStorage.getItem('webos_last_widget');
+            if (raw) {
+                try {
+                    const w = JSON.parse(raw);
+                    addWidgetToast(w.id, w.name, w.file);
+                } catch(e) {}
+            }
+        }
+        
         function toggleFullScreen() {
             if (!document.fullscreenElement) {
                 document.documentElement.requestFullscreen().catch(() => {
